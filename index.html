@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>東京旅遊小助手</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    </style>
+</head>
+<body class="text-slate-800">
+
+<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-20">
+    
+    <header class="p-6 bg-indigo-600 text-white shadow-lg sticky top-0 z-50">
+        <h1 class="text-2xl font-bold flex items-center gap-2">
+            <i class="fas fa-plane-departure"></i> 東京冒險之旅
+        </h1>
+        <p class="text-indigo-100 text-sm opacity-90">Tokyo Trip 2026</p>
+    </header>
+
+    <main class="flex-1 p-4 overflow-y-auto">
+        
+        <section v-if="activeTab === 'itinerary'" class="space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold">每日行程</h2>
+                <button @click="addItinerary" class="bg-indigo-500 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-indigo-600 transition">
+                    + 新增地點
+                </button>
+            </div>
+
+            <div v-for="(item, index) in itinerary" :key="index" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 relative group">
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <input type="time" v-model="item.time" class="text-sm font-bold text-indigo-600 bg-transparent border-none p-0 w-16 focus:ring-0">
+                        <div class="w-0.5 h-full bg-indigo-100 my-1"></div>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" v-model="item.location" placeholder="地點名稱" class="w-full font-bold text-lg border-none p-0 focus:ring-0">
+                        <div class="flex gap-2 mt-2">
+                            <button @click="openGoogleMap(item.location)" class="text-xs text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded">
+                                <i class="fas fa-map-marker-alt"></i> 導航
+                            </button>
+                            <button @click="deleteItinerary(index)" class="text-xs text-red-400 px-2 py-1">刪除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section v-if="activeTab === 'split'" class="space-y-4">
+            <h2 class="text-xl font-bold mb-4">費用結算</h2>
+            
+            <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                <h3 class="text-sm font-bold text-indigo-700 mb-3">新增支出</h3>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" v-model="newExpense.payer" placeholder="付款人" class="rounded-xl border-slate-200 text-sm">
+                    <input type="number" v-model.number="newExpense.amount" placeholder="金額 (JPY)" class="rounded-xl border-slate-200 text-sm">
+                </div>
+                <button @click="addExpense" class="w-full bg-indigo-600 text-white py-2 rounded-xl text-sm font-bold">紀錄一筆</button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="p-3">付款人</th>
+                            <th class="p-3">金額</th>
+                            <th class="p-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(exp, idx) in expenses" :key="idx" class="border-t border-slate-100">
+                            <td class="p-3">{{ exp.payer }}</td>
+                            <td class="p-3">¥{{ exp.amount }}</td>
+                            <td class="p-3 text-right">
+                                <button @click="expenses.splice(idx, 1)" class="text-red-400"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div v-if="settlements.length > 0" class="bg-green-50 p-4 rounded-2xl border border-green-100">
+                <h3 class="text-sm font-bold text-green-700 mb-2">建議結算方式</h3>
+                <ul class="text-sm space-y-1">
+                    <li v-for="s in settlements" class="flex justify-between">
+                        <span>{{ s.from }} → {{ s.to }}</span>
+                        <span class="font-bold text-green-600">¥{{ Math.round(s.amount) }}</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section v-if="activeTab === 'map'" class="space-y-4">
+            <h2 class="text-xl font-bold">地圖工具</h2>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+                <p class="text-sm text-slate-500">點擊下方按鈕直接開啟 Google Maps 前往東京熱門景點</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button v-for="spot in quickSpots" @click="openGoogleMap(spot)" class="p-3 text-left bg-slate-50 rounded-xl border border-slate-100 hover:bg-indigo-50 transition">
+                        <div class="text-xs text-slate-400">景點</div>
+                        <div class="font-bold text-sm">{{ spot }}</div>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-card border-t border-slate-200 flex justify-around p-3 safe-area-bottom shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <button @click="activeTab = 'itinerary'" :class="{'text-indigo-600': activeTab === 'itinerary', 'text-slate-400': activeTab !== 'itinerary'}" class="flex flex-col items-center gap-1 transition-all">
+            <i class="fas fa-calendar-day text-xl"></i>
+            <span class="text-[10px] font-bold">行程</span>
+        </button>
+        <button @click="activeTab = 'split'" :class="{'text-indigo-600': activeTab === 'split', 'text-slate-400': activeTab !== 'split'}" class="flex flex-col items-center gap-1 transition-all">
+            <i class="fas fa-wallet text-xl"></i>
+            <span class="text-[10px] font-bold">分帳</span>
+        </button>
+        <button @click="activeTab = 'map'" :class="{'text-indigo-600': activeTab === 'map', 'text-slate-400': activeTab !== 'map'}" class="flex flex-col items-center gap-1 transition-all">
+            <i class="fas fa-map-marked-alt text-xl"></i>
+            <span class="text-[10px] font-bold">地圖</span>
+        </button>
+    </nav>
+</div>
+
+<script>
+    const { createApp, ref, computed, watchEffect } = Vue;
+
+    createApp({
+        setup() {
+            const activeTab = ref('itinerary');
+            
+            // 行程數據 (讀取 localStorage)
+            const itinerary = ref(JSON.parse(localStorage.getItem('tokyo_itinerary')) || [
+                { time: '09:00', location: '成田機場' },
+                { time: '14:00', location: '淺草寺' },
+                { time: '19:00', location: '晴空塔' }
+            ]);
+
+            // 分帳數據
+            const expenses = ref(JSON.parse(localStorage.getItem('tokyo_expenses')) || []);
+            const newExpense = ref({ payer: '', amount: null });
+
+            const quickSpots = ['東京鐵塔', '澀谷 SHIBUYA SKY', '新宿御苑', '築地市場', '秋葉原'];
+
+            // 自動儲存
+            watchEffect(() => {
+                localStorage.setItem('tokyo_itinerary', JSON.stringify(itinerary.value));
+                localStorage.setItem('tokyo_expenses', JSON.stringify(expenses.value));
+            });
+
+            // 行程功能
+            const addItinerary = () => {
+                itinerary.value.push({ time: '12:00', location: '新景點' });
+                itinerary.value.sort((a, b) => a.time.localeCompare(b.time));
+            };
+            const deleteItinerary = (idx) => itinerary.value.splice(idx, 1);
+
+            // 分帳邏輯
+            const addExpense = () => {
+                if (newExpense.value.payer && newExpense.value.amount) {
+                    expenses.value.push({ ...newExpense.value });
+                    newExpense.value = { payer: '', amount: null };
+                }
+            };
+
+            const settlements = computed(() => {
+                if (expenses.value.length === 0) return [];
+                const totals = {};
+                expenses.value.forEach(e => {
+                    totals[e.payer] = (totals[e.payer] || 0) + e.amount;
+                });
+                
+                const participants = Object.keys(totals);
+                const sum = Object.values(totals).reduce((a, b) => a + b, 0);
+                const avg = sum / participants.length;
+                
+                const balances = participants.map(p => ({
+                    name: p,
+                    balance: totals[p] - avg
+                }));
+
+                const debtors = balances.filter(b => b.balance < 0).sort((a, b) => a.balance - b.balance);
+                const creditors = balances.filter(b => b.balance > 0).sort((a, b) => b.balance - a.balance);
+                
+                const result = [];
+                let i = 0, j = 0;
+                while (i < debtors.length && j < creditors.length) {
+                    const amount = Math.min(-debtors[i].balance, creditors[j].balance);
+                    result.push({ from: debtors[i].name, to: creditors[j].name, amount });
+                    debtors[i].balance += amount;
+                    creditors[j].balance -= amount;
+                    if (Math.abs(debtors[i].balance) < 1) i++;
+                    if (Math.abs(creditors[j].balance) < 1) j++;
+                }
+                return result;
+            });
+
+            // 地圖功能
+            const openGoogleMap = (loc) => {
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`;
+                window.open(url, '_blank');
+            };
+
+            return {
+                activeTab, itinerary, expenses, newExpense, settlements, quickSpots,
+                addItinerary, deleteItinerary, addExpense, openGoogleMap
+            };
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
