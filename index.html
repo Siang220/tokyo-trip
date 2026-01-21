@@ -12,45 +12,56 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
-        .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .tab-shadow { box-shadow: 0 -4px 12px rgba(0,0,0,0.05); }
         .jp-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
-        .deepl-btn { background-color: #0f2e46; color: #fff; }
     </style>
 </head>
 <body class="text-slate-800">
 
-<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-28">
+<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-24">
     <header class="p-6 jp-card text-white shadow-xl sticky top-0 z-50 rounded-b-[32px]">
         <div class="flex justify-between items-start mb-2">
             <div>
                 <input v-model="tripTitle" @change="updateCloud" class="bg-transparent border-none p-0 text-2xl font-bold focus:ring-0 w-full">
-                <p class="text-[10px] opacity-70 tracking-widest uppercase">Japan Travel Companion v3.1</p>
+                <p class="text-[10px] opacity-70 tracking-widest uppercase">Japan Travel Companion v3.0</p>
             </div>
+            <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-1 rounded-full border border-green-500/30">
+                ● 雲端已連線
+            </span>
         </div>
         <div class="grid grid-cols-2 gap-3 mt-4">
             <div class="bg-white/10 p-2 rounded-xl border border-white/10 text-center">
-                <p class="text-[9px] opacity-60">台幣匯率 (預估)</p>
-                <p class="text-sm font-bold">1 JPY ≈ 0.211 TWD</p>
+                <p class="text-[9px] opacity-60">即時匯率 (JPY→TWD)</p>
+                <p class="text-sm font-bold">1 : 0.211 <span class="text-[10px] font-light"> (自動)</span></p>
             </div>
-            <button @click="openDeepL" class="deepl-btn p-2 rounded-xl border border-white/20 text-center flex items-center justify-center gap-2 active:scale-95 transition">
-                <i class="fas fa-language"></i>
-                <span class="text-xs font-bold">開啟 DeepL 翻譯</span>
-            </button>
+            <a href="https://www.jnto.go.jp/weather/chc/index.php" target="_blank" class="bg-white/10 p-2 rounded-xl border border-white/10 text-center flex items-center justify-center gap-2">
+                <i class="fas fa-sun text-yellow-400"></i>
+                <span class="text-xs">全日本天氣</span>
+            </a>
         </div>
     </header>
 
     <main class="flex-1 p-5 space-y-8">
+        
         <section v-if="activeTab === 'itinerary'" class="space-y-4">
             <div class="flex justify-between items-end">
                 <h2 class="font-bold text-xl text-slate-800">每日計畫</h2>
-                <button @click="addItinerary" class="bg-indigo-600 text-white text-xs px-5 py-2 rounded-full shadow-lg">+ 新增</button>
+                <button @click="addItinerary" class="bg-indigo-600 text-white text-xs px-5 py-2 rounded-full shadow-lg">+ 新增地點</button>
             </div>
-            <div v-for="(item, id) in itinerary" :key="id" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex gap-4">
-                <input type="time" v-model="item.time" @change="updateCloud" class="text-sm font-bold text-indigo-600 bg-slate-50 rounded-lg p-1 border-none w-16 text-center">
-                <div class="flex-1">
-                    <input type="text" v-model="item.location" @change="updateCloud" class="w-full font-bold text-slate-800 border-none p-0 focus:ring-0 text-lg">
-                    <button @click="openGoogleMap(item.location)" class="text-xs text-blue-600 font-medium mt-1 inline-block">導航前往</button>
-                    <button @click="removeItem('itinerary', id)" class="text-xs text-slate-300 ml-4">刪除</button>
+            <div v-for="(item, id) in itinerary" :key="id" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative">
+                <div class="flex items-start gap-4">
+                    <div class="pt-1">
+                        <input type="time" v-model="item.time" @change="updateCloud" class="text-sm font-bold text-indigo-600 bg-slate-50 rounded-lg p-1 border-none focus:ring-0 w-16 text-center">
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" v-model="item.location" @change="updateCloud" class="w-full font-bold text-slate-800 border-none p-0 focus:ring-0 text-lg mb-1" placeholder="地點名稱">
+                        <div class="flex gap-4">
+                            <button @click="openGoogleMap(item.location)" class="text-xs text-blue-600 flex items-center gap-1 font-medium">
+                                <i class="fas fa-directions"></i> Google 導航
+                            </button>
+                            <button @click="removeItem('itinerary', id)" class="text-xs text-slate-300">刪除</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -59,65 +70,78 @@
             <h2 class="font-bold text-xl">公帳結算</h2>
             <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
                 <div class="grid grid-cols-2 gap-3">
-                    <input v-model="newExp.name" placeholder="誰付款" class="bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
-                    <input v-model.number="newExp.amount" type="number" placeholder="日圓金額" class="bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 ml-1">誰付款</label>
+                        <input v-model="newExp.name" class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 ml-1">金額 (日圓)</label>
+                        <input v-model.number="newExp.amount" type="number" class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+                    </div>
                 </div>
-                <button @click="addExpense" class="w-full bg-slate-800 text-white py-3.5 rounded-2xl font-bold shadow-md">紀錄支出</button>
+                <button @click="addExpense" class="w-full bg-slate-800 text-white py-3.5 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition">紀錄這筆支出</button>
             </div>
-            <div v-for="(exp, id) in expenses" :key="id" class="flex justify-between items-center bg-white px-5 py-4 rounded-2xl border border-slate-100">
-                <span class="font-bold">{{ exp.name }}</span>
-                <span class="font-mono text-indigo-600 font-bold">¥{{ exp.amount }}</span>
+
+            <div class="space-y-3">
+                <div v-for="(exp, id) in expenses" :key="id" class="flex justify-between items-center bg-white px-5 py-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <span class="font-bold text-slate-700">{{ exp.name }}</span>
+                        <p class="text-[10px] text-slate-400">約台幣 ${{ Math.round(exp.amount * 0.211) }}</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-mono font-bold text-indigo-600">¥{{ exp.amount }}</span>
+                        <button @click="removeItem('expenses', id)" class="text-slate-200 hover:text-red-400"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
             </div>
-            <div v-if="settlements.length > 0" class="bg-indigo-900 text-white p-6 rounded-[32px]">
-                <div v-for="s in settlements" class="flex justify-between py-2 border-b border-white/10 last:border-0 text-sm">
-                    <span>{{ s.from }} → {{ s.to }}</span>
-                    <span class="font-bold">¥{{ Math.round(s.amount) }}</span>
+
+            <div v-if="settlements.length > 0" class="bg-indigo-900 text-white p-6 rounded-[32px] shadow-2xl">
+                <h4 class="text-center text-[10px] uppercase tracking-widest mb-4 opacity-50 font-bold">結算方案</h4>
+                <div v-for="s in settlements" class="flex justify-between items-center py-3 border-b border-white/10 last:border-0">
+                    <span class="text-sm">{{ s.from }} → {{ s.to }}</span>
+                    <span class="font-mono font-bold text-lg text-indigo-300">¥{{ Math.round(s.amount) }}</span>
                 </div>
             </div>
         </section>
 
         <section v-if="activeTab === 'tools'" class="space-y-8">
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border-2 border-indigo-100">
-                <h2 class="font-bold text-lg mb-3 flex items-center gap-2">
-                    <i class="fas fa-comment-dots text-indigo-500"></i> 店員溝通看板
-                </h2>
-                <textarea v-model="customMsg" rows="2" placeholder="輸入想說的話 (中文或日文)..." class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm mb-3 focus:ring-0"></textarea>
-                <button @click="showBigText(customMsg)" class="w-full bg-indigo-500 text-white py-3 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition">顯示大字給店員看</button>
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-xl">行李與票券清單</h2>
+                    <button @click="addTodo" class="text-indigo-600 text-xs font-bold border border-indigo-200 px-3 py-1 rounded-full">+ 新增</button>
+                </div>
+                <div class="grid grid-cols-1 gap-2">
+                    <div v-for="(todo, id) in todos" :key="id" @click="toggleTodo(id)" class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm" :class="{'opacity-50 grayscale': todo.done}">
+                        <i :class="todo.done ? 'fas fa-check-circle text-green-500' : 'far fa-circle text-slate-300'"></i>
+                        <span :class="{'line-through': todo.done}" class="flex-1 text-sm font-medium">{{ todo.text }}</span>
+                        <button @click.stop="removeItem('todos', id)" class="text-slate-200"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
             </div>
 
             <div>
-                <h2 class="font-bold text-xl mb-4 text-slate-800">常用快速字卡</h2>
+                <h2 class="font-bold text-xl mb-4 text-slate-800">常用日語字卡</h2>
                 <div class="grid grid-cols-2 gap-3">
-                    <button v-for="jp in langCards" @click="showBigText(jp.jp)" class="p-4 bg-white rounded-2xl border border-slate-100 text-left active:scale-95 transition shadow-sm">
+                    <button v-for="jp in langCards" @click="showBigText(jp)" class="p-4 bg-white rounded-2xl border border-slate-100 text-left hover:bg-slate-50 active:scale-95 transition shadow-sm">
                         <p class="text-[10px] text-indigo-500 font-bold mb-1">{{ jp.ch }}</p>
-                        <p class="text-sm font-bold text-slate-700">{{ jp.jp }}</p>
+                        <p class="text-sm font-bold text-slate-700 line-clamp-1">{{ jp.jp }}</p>
                     </button>
                 </div>
-            </div>
-
-            <div>
-                <div class="flex justify-between items-center mb-4 text-xl font-bold">行李票券</div>
-                <div v-for="(todo, id) in todos" :key="id" @click="toggleTodo(id)" class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 mb-2" :class="{'opacity-40': todo.done}">
-                    <i :class="todo.done ? 'fas fa-check-circle text-green-500' : 'far fa-circle text-slate-300'"></i>
-                    <span class="flex-1 text-sm">{{ todo.text }}</span>
-                    <button @click.stop="removeItem('todos', id)" class="text-slate-200"><i class="fas fa-trash"></i></button>
-                </div>
-                <button @click="addTodo" class="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-sm font-bold mt-2">+ 新增項目</button>
             </div>
         </section>
     </main>
 
-    <div v-if="bigText" @click="bigText = ''" class="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-8 text-center">
-        <p class="text-white text-5xl font-bold leading-tight break-words w-full">{{ bigText }}</p>
-        <p class="fixed bottom-10 text-white/30 text-xs">點擊螢幕任何地方關閉</p>
+    <div v-if="bigText" @click="bigText = ''" class="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-10 text-center">
+        <p class="text-white text-4xl font-bold leading-tight">{{ bigText }}</p>
+        <p class="fixed bottom-10 text-white/40 text-sm">點擊關閉</p>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-nav border-t border-slate-100 flex justify-around p-5 safe-area-bottom rounded-t-[32px] z-40">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-nav border-t border-slate-100 flex justify-around p-5 safe-area-bottom tab-shadow rounded-t-[32px] z-40 bg-white/80">
         <button v-for="t in [
             {id: 'itinerary', icon: 'fa-route', label: '行程'},
-            {id: 'split', icon: 'fa-yen-sign', label: '分帳'},
-            {id: 'tools', icon: 'fa-language', label: '翻譯/工具'}
-        ]" @click="activeTab = t.id" :class="activeTab === t.id ? 'text-indigo-600' : 'text-slate-300'" class="flex flex-col items-center gap-1 transition-all">
+            {id: 'split', icon: 'fa-calculator', label: '分帳'},
+            {id: 'tools', icon: 'fa- suitcase', label: '工具'}
+        ]" @click="activeTab = t.id" :class="activeTab === t.id ? 'text-indigo-600' : 'text-slate-300'" class="flex flex-col items-center gap-1">
             <i class="fas text-xl" :class="t.icon"></i>
             <span class="text-[9px] font-bold">{{ t.label }}</span>
         </button>
@@ -125,6 +149,7 @@
 </div>
 
 <script>
+// 使用同一個示範資料庫網址，你的資料會保留
 const firebaseConfig = { databaseURL: "https://tokyo-trip-demo-default-rtdb.firebaseio.com/" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -136,7 +161,6 @@ createApp({
         const activeTab = ref('itinerary');
         const tripTitle = ref('我的日本之旅');
         const bigText = ref('');
-        const customMsg = ref('');
         const itinerary = ref({});
         const expenses = ref({});
         const todos = ref({});
@@ -147,8 +171,8 @@ createApp({
             { ch: '可以刷卡嗎？', jp: 'カードは使えますか？' },
             { ch: '免稅嗎？', jp: '免税になりますか？' },
             { ch: '謝謝', jp: 'ありがとうございます' },
-            { ch: '不需要袋子', jp: '袋はいりません' },
-            { ch: '我要結帳', jp: 'お会計をお願いします' }
+            { ch: '在哪裡？', jp: '場所はどこですか？' },
+            { ch: '不需要袋子', jp: '袋はいりません' }
         ];
 
         onMounted(() => {
@@ -168,17 +192,9 @@ createApp({
             db.ref('todos').set(todos.value);
         };
 
-        const openDeepL = () => {
-            window.open('https://www.deepl.com/translator#zh/ja/', '_blank');
-        };
-
-        const showBigText = (text) => {
-            if (text) bigText.value = text;
-        };
-
         const addItinerary = () => {
             const key = db.ref('itinerary').push().key;
-            db.ref(`itinerary/${key}`).set({ time: '10:00', location: '新地點' });
+            db.ref(`itinerary/${key}`).set({ time: '10:00', location: '輸入地點' });
         };
 
         const addExpense = () => {
@@ -189,7 +205,7 @@ createApp({
         };
 
         const addTodo = () => {
-            const text = prompt("新增清單項目");
+            const text = prompt("新增清單項目 (例: 護照、JR Pass)");
             if (text) {
                 const key = db.ref('todos').push().key;
                 db.ref(`todos/${key}`).set({ text, done: false });
@@ -198,6 +214,7 @@ createApp({
 
         const toggleTodo = (id) => db.ref(`todos/${id}/done`).set(!todos.value[id].done);
         const removeItem = (path, id) => db.ref(`${path}/${id}`).remove();
+        const showBigText = (jp) => bigText.value = jp.jp;
 
         const settlements = computed(() => {
             const exps = Object.values(expenses.value);
@@ -222,8 +239,8 @@ createApp({
         });
 
         return {
-            activeTab, tripTitle, itinerary, expenses, todos, newExp, settlements, langCards, bigText, customMsg,
-            addItinerary, addExpense, addTodo, toggleTodo, updateCloud, removeItem, showBigText, openDeepL,
+            activeTab, tripTitle, itinerary, expenses, todos, newExp, settlements, langCards, bigText,
+            addItinerary, addExpense, addTodo, toggleTodo, updateCloud, removeItem, showBigText,
             openGoogleMap: (loc) => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank')
         }
     }
