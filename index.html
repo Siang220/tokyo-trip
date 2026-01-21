@@ -2,249 +2,231 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>日本旅遊萬用助手 Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>日本同行同步助手</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- 替換成你的 Firebase 配置 ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // ------------------------------
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const activeTab = ref('itinerary');
+                const itinerary = ref([]);
+                const fxRate = ref(0.215);
+                const taxRate = ref(10);
+                const taxInput = ref(null);
+                const bill = ref({ amount: null, people: 1 });
+                const syncStatus = ref('connecting'); // connecting, synced, saving
+
+                // 雲端資料 ID (如果是不同團體，可以修改這個 ID)
+                const tripId = "japan_trip_2026_shared";
+                const tripRef = doc(db, "trips", tripId);
+
+                // 1. 即時監聽雲端資料 (大家看同一份)
+                onMounted(() => {
+                    onSnapshot(tripRef, (snapshot) => {
+                        if (snapshot.exists()) {
+                            const data = snapshot.data();
+                            itinerary.value = data.itinerary || [];
+                            fxRate.value = data.fxRate || 0.215;
+                        } else {
+                            // 初始化資料庫
+                            setDoc(tripRef, { itinerary: [], fxRate: 0.215 });
+                        }
+                        syncStatus.value = 'synced';
+                    }, (error) => {
+                        console.error("同步失敗:", error);
+                        syncStatus.value = 'error';
+                    });
+                });
+
+                // 2. 本地修改後同步至雲端 (Debounce 防抖)
+                let timer;
+                const syncData = () => {
+                    syncStatus.value = 'saving';
+                    clearTimeout(timer);
+                    timer = setTimeout(async () => {
+                        try {
+                            await updateDoc(tripRef, {
+                                itinerary: JSON.parse(JSON.stringify(itinerary.value)),
+                                fxRate: fxRate.value
+                            });
+                            syncStatus.value = 'synced';
+                        } catch (e) {
+                            console.error("更新失敗:", e);
+                        }
+                    }, 500); 
+                };
+
+                const addItinerary = () => {
+                    itinerary.value.push({ time: "09:00", location: "", note: "" });
+                    syncData();
+                };
+
+                const deleteItinerary = (idx) => {
+                    if(confirm('刪除這項行程？')) {
+                        itinerary.value.splice(idx, 1);
+                        syncData();
+                    }
+                };
+
+                const taxRefunded = computed(() => {
+                    if (!taxInput.value) return { total: 0, saved: 0 };
+                    const original = taxInput.value / (1 + taxRate.value / 100);
+                    return { total: Math.round(original), saved: Math.round(taxInput.value - original) };
+                });
+
+                const openMap = (l) => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l)}`, '_blank');
+                
+                const openAllMap = () => {
+                    const locs = itinerary.value.map(i => i.location).filter(l => l);
+                    if (!locs.length) return alert("請先輸入地點");
+                    const waypoints = locs.slice(0, -1).map(l => encodeURIComponent(l)).join('|');
+                    window.open(`https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination=${encodeURIComponent(locs[locs.length-1])}&waypoints=${waypoints}&travelmode=transit`, '_blank');
+                };
+
+                return {
+                    activeTab, itinerary, bill, fxRate, taxRate, taxInput, taxRefunded, syncStatus,
+                    addItinerary, deleteItinerary, syncData, openMap, openAllMap
+                };
+            }
+        }).mount('#app');
+    </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
-        .tab-shadow { box-shadow: 0 -4px 12px rgba(0,0,0,0.05); }
-        .jp-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+        body { font-family: 'Noto Sans TC', sans-serif; background: #F2F2F7; }
+        .app-card { background: white; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.05); }
+        input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(30%) sepia(100%) saturate(2000%) hue-rotate(340deg); }
     </style>
 </head>
-<body class="text-slate-800">
+<body class="antialiased select-none">
 
-<div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative pb-24">
-    <header class="p-6 jp-card text-white shadow-xl sticky top-0 z-50 rounded-b-[32px]">
-        <div class="flex justify-between items-start mb-2">
-            <div>
-                <input v-model="tripTitle" @change="updateCloud" class="bg-transparent border-none p-0 text-2xl font-bold focus:ring-0 w-full">
-                <p class="text-[10px] opacity-70 tracking-widest uppercase">Japan Travel Companion v3.0</p>
+<div id="app" class="max-w-md mx-auto min-h-screen relative pb-32">
+    
+    <header class="p-6 sticky top-0 bg-[#F2F2F7]/90 backdrop-blur-md z-[100] flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900 leading-tight">Live Sync Trip</h1>
+            <div class="flex items-center gap-1.5 mt-1">
+                <div :class="['w-2 h-2 rounded-full', syncStatus === 'synced' ? 'bg-green-500' : 'bg-orange-400 animate-pulse']"></div>
+                <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+                    {{ syncStatus === 'synced' ? '已即時同步' : '雲端更新中' }}
+                </span>
             </div>
-            <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-1 rounded-full border border-green-500/30">
-                ● 雲端已連線
-            </span>
         </div>
-        <div class="grid grid-cols-2 gap-3 mt-4">
-            <div class="bg-white/10 p-2 rounded-xl border border-white/10 text-center">
-                <p class="text-[9px] opacity-60">即時匯率 (JPY→TWD)</p>
-                <p class="text-sm font-bold">1 : 0.211 <span class="text-[10px] font-light"> (自動)</span></p>
-            </div>
-            <a href="https://www.jnto.go.jp/weather/chc/index.php" target="_blank" class="bg-white/10 p-2 rounded-xl border border-white/10 text-center flex items-center justify-center gap-2">
-                <i class="fas fa-sun text-yellow-400"></i>
-                <span class="text-xs">全日本天氣</span>
-            </a>
-        </div>
+        <button v-if="activeTab === 'itinerary'" @click="addItinerary" class="w-12 h-12 bg-gray-900 text-white rounded-2xl shadow-xl active:scale-90 transition">
+            <i class="fas fa-plus"></i>
+        </button>
     </header>
 
-    <main class="flex-1 p-5 space-y-8">
+    <main class="px-5">
         
-        <section v-if="activeTab === 'itinerary'" class="space-y-4">
-            <div class="flex justify-between items-end">
-                <h2 class="font-bold text-xl text-slate-800">每日計畫</h2>
-                <button @click="addItinerary" class="bg-indigo-600 text-white text-xs px-5 py-2 rounded-full shadow-lg">+ 新增地點</button>
-            </div>
-            <div v-for="(item, id) in itinerary" :key="id" class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 relative">
-                <div class="flex items-start gap-4">
-                    <div class="pt-1">
-                        <input type="time" v-model="item.time" @change="updateCloud" class="text-sm font-bold text-indigo-600 bg-slate-50 rounded-lg p-1 border-none focus:ring-0 w-16 text-center">
+        <div v-if="activeTab === 'itinerary'" class="space-y-4 animate-fade-in">
+            <button @click="openAllMap" class="w-full bg-blue-600 p-4 rounded-3xl text-white font-bold shadow-lg shadow-blue-100 active:scale-95 transition">
+                🗺️ 群組地圖：釘選所有地點
+            </button>
+
+            <div v-for="(item, index) in itinerary" :key="index" class="app-card p-5 border border-transparent focus-within:border-red-100 transition">
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <input v-model="item.time" @input="syncData" type="time" class="font-bold text-red-600 text-sm bg-transparent outline-none">
+                        <div class="w-[2px] h-full bg-gray-50 my-2"></div>
+                        <button @click="deleteItinerary(index)" class="text-gray-200 hover:text-red-400"><i class="fas fa-trash-can"></i></button>
                     </div>
                     <div class="flex-1">
-                        <input type="text" v-model="item.location" @change="updateCloud" class="w-full font-bold text-slate-800 border-none p-0 focus:ring-0 text-lg mb-1" placeholder="地點名稱">
-                        <div class="flex gap-4">
-                            <button @click="openGoogleMap(item.location)" class="text-xs text-blue-600 flex items-center gap-1 font-medium">
-                                <i class="fas fa-directions"></i> Google 導航
-                            </button>
-                            <button @click="removeItem('itinerary', id)" class="text-xs text-slate-300">刪除</button>
+                        <input v-model="item.location" @input="syncData" placeholder="行程名稱" class="w-full font-black text-gray-800 text-lg outline-none placeholder:text-gray-200">
+                        <input v-model="item.note" @input="syncData" placeholder="給旅伴的備註..." class="w-full text-xs text-gray-400 mt-1 outline-none bg-transparent">
+                        <div class="mt-3 flex gap-2">
+                            <button @click="openMap(item.location)" class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-lg uppercase">地圖導航</button>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <section v-if="activeTab === 'split'" class="space-y-6">
-            <h2 class="font-bold text-xl">公帳結算</h2>
-            <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-400 ml-1">誰付款</label>
-                        <input v-model="newExp.name" class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] text-slate-400 ml-1">金額 (日圓)</label>
-                        <input v-model.number="newExp.amount" type="number" class="w-full bg-slate-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500">
+        <div v-if="activeTab === 'finance'" class="space-y-6">
+            <div class="bg-gray-900 rounded-[2.5rem] p-7 text-white shadow-2xl relative overflow-hidden">
+                <div class="flex justify-between mb-8">
+                    <span class="text-[10px] font-black tracking-widest text-yellow-500 uppercase">Tax Refund</span>
+                    <div class="flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full text-xs">
+                        <input v-model.number="taxRate" class="w-6 bg-transparent text-center focus:outline-none font-bold"><span>%</span>
                     </div>
                 </div>
-                <button @click="addExpense" class="w-full bg-slate-800 text-white py-3.5 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition">紀錄這筆支出</button>
-            </div>
-
-            <div class="space-y-3">
-                <div v-for="(exp, id) in expenses" :key="id" class="flex justify-between items-center bg-white px-5 py-4 rounded-2xl border border-slate-100">
+                <input v-model.number="taxInput" type="number" class="w-full bg-transparent text-5xl font-light outline-none mb-6" placeholder="¥ 0">
+                <div class="grid grid-cols-2 pt-6 border-t border-white/10">
                     <div>
-                        <span class="font-bold text-slate-700">{{ exp.name }}</span>
-                        <p class="text-[10px] text-slate-400">約台幣 ${{ Math.round(exp.amount * 0.211) }}</p>
+                        <p class="text-[10px] text-gray-500 uppercase font-bold">退稅後</p>
+                        <p class="text-xl font-bold">¥ {{ taxRefunded.total }}</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-mono font-bold text-indigo-600">¥{{ exp.amount }}</span>
-                        <button @click="removeItem('expenses', id)" class="text-slate-200 hover:text-red-400"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <div v-if="settlements.length > 0" class="bg-indigo-900 text-white p-6 rounded-[32px] shadow-2xl">
-                <h4 class="text-center text-[10px] uppercase tracking-widest mb-4 opacity-50 font-bold">結算方案</h4>
-                <div v-for="s in settlements" class="flex justify-between items-center py-3 border-b border-white/10 last:border-0">
-                    <span class="text-sm">{{ s.from }} → {{ s.to }}</span>
-                    <span class="font-mono font-bold text-lg text-indigo-300">¥{{ Math.round(s.amount) }}</span>
-                </div>
-            </div>
-        </section>
-
-        <section v-if="activeTab === 'tools'" class="space-y-8">
-            <div>
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-xl">行李與票券清單</h2>
-                    <button @click="addTodo" class="text-indigo-600 text-xs font-bold border border-indigo-200 px-3 py-1 rounded-full">+ 新增</button>
-                </div>
-                <div class="grid grid-cols-1 gap-2">
-                    <div v-for="(todo, id) in todos" :key="id" @click="toggleTodo(id)" class="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm" :class="{'opacity-50 grayscale': todo.done}">
-                        <i :class="todo.done ? 'fas fa-check-circle text-green-500' : 'far fa-circle text-slate-300'"></i>
-                        <span :class="{'line-through': todo.done}" class="flex-1 text-sm font-medium">{{ todo.text }}</span>
-                        <button @click.stop="removeItem('todos', id)" class="text-slate-200"><i class="fas fa-times"></i></button>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-500 uppercase font-bold">省下台幣</p>
+                        <p class="text-xl font-bold text-yellow-500">$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <h2 class="font-bold text-xl mb-4 text-slate-800">常用日語字卡</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <button v-for="jp in langCards" @click="showBigText(jp)" class="p-4 bg-white rounded-2xl border border-slate-100 text-left hover:bg-slate-50 active:scale-95 transition shadow-sm">
-                        <p class="text-[10px] text-indigo-500 font-bold mb-1">{{ jp.ch }}</p>
-                        <p class="text-sm font-bold text-slate-700 line-clamp-1">{{ jp.jp }}</p>
-                    </button>
+            <div class="app-card p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="font-black text-gray-900">群組費用同步</h3>
+                    <div class="text-right">
+                        <p class="text-[9px] text-gray-400 font-bold">公用匯率</p>
+                        <input v-model.number="fxRate" @input="syncData" step="0.001" type="number" class="w-16 text-right font-black text-red-600 outline-none">
+                    </div>
+                </div>
+                <div class="space-y-5">
+                    <input v-model.number="bill.amount" type="number" class="w-full p-4 bg-gray-50 rounded-2xl text-xl font-bold outline-none" placeholder="輸入總額 (JPY)">
+                    <input v-model.number="bill.people" type="number" class="w-full p-4 bg-gray-50 rounded-2xl text-xl font-bold outline-none" placeholder="分攤人數">
+                    <div v-if="bill.amount" class="p-6 bg-red-600 text-white rounded-[2rem] text-center shadow-lg shadow-red-100">
+                        <p class="text-xs opacity-70 mb-1">每人應付台幣</p>
+                        <p class="text-4xl font-black">$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</p>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        <div v-if="activeTab === 'tool'" class="space-y-4">
+            <a href="https://www.deepl.com/translator#zh/ja/" target="_blank" class="app-card p-6 flex items-center justify-between active:bg-gray-50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-language"></i></div>
+                    <div><h4 class="font-black">DeepL 翻譯</h4><p class="text-xs text-gray-400">目前最強的日文翻譯</p></div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-200"></i>
+            </a>
+        </div>
+
     </main>
 
-    <div v-if="bigText" @click="bigText = ''" class="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-10 text-center">
-        <p class="text-white text-4xl font-bold leading-tight">{{ bigText }}</p>
-        <p class="fixed bottom-10 text-white/40 text-sm">點擊關閉</p>
-    </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-nav border-t border-slate-100 flex justify-around p-5 safe-area-bottom tab-shadow rounded-t-[32px] z-40 bg-white/80">
-        <button v-for="t in [
-            {id: 'itinerary', icon: 'fa-route', label: '行程'},
-            {id: 'split', icon: 'fa-calculator', label: '分帳'},
-            {id: 'tools', icon: 'fa- suitcase', label: '工具'}
-        ]" @click="activeTab = t.id" :class="activeTab === t.id ? 'text-indigo-600' : 'text-slate-300'" class="flex flex-col items-center gap-1">
-            <i class="fas text-xl" :class="t.icon"></i>
-            <span class="text-[9px] font-bold">{{ t.label }}</span>
+    <nav class="fixed bottom-0 inset-x-0 h-24 glass-nav flex justify-around items-center px-10 z-[100]">
+        <button @click="activeTab = 'itinerary'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'itinerary' ? 'text-red-600 scale-110' : 'text-gray-300']">
+            <i class="fas fa-compass text-xl"></i><span class="text-[9px] font-black uppercase">Itinerary</span>
+        </button>
+        <button @click="activeTab = 'finance'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'finance' ? 'text-red-600 scale-110' : 'text-gray-300']">
+            <i class="fas fa-wallet text-xl"></i><span class="text-[9px] font-black uppercase">Finance</span>
+        </button>
+        <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'tool' ? 'text-red-600 scale-110' : 'text-gray-300']">
+            <i class="fas fa-grid-2 text-xl"></i><span class="text-[9px] font-black uppercase">Tools</span>
         </button>
     </nav>
 </div>
 
-<script>
-// 使用同一個示範資料庫網址，你的資料會保留
-const firebaseConfig = { databaseURL: "https://tokyo-trip-demo-default-rtdb.firebaseio.com/" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-const { createApp, ref, computed, onMounted } = Vue;
-
-createApp({
-    setup() {
-        const activeTab = ref('itinerary');
-        const tripTitle = ref('我的日本之旅');
-        const bigText = ref('');
-        const itinerary = ref({});
-        const expenses = ref({});
-        const todos = ref({});
-        const newExp = ref({ name: '', amount: null });
-
-        const langCards = [
-            { ch: '請給我這個', jp: 'これをお願いします' },
-            { ch: '可以刷卡嗎？', jp: 'カードは使えますか？' },
-            { ch: '免稅嗎？', jp: '免税になりますか？' },
-            { ch: '謝謝', jp: 'ありがとうございます' },
-            { ch: '在哪裡？', jp: '場所はどこですか？' },
-            { ch: '不需要袋子', jp: '袋はいりません' }
-        ];
-
-        onMounted(() => {
-            db.ref('/').on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                tripTitle.value = data.tripTitle || '我的日本之旅';
-                itinerary.value = data.itinerary || {};
-                expenses.value = data.expenses || {};
-                todos.value = data.todos || {};
-            });
-        });
-
-        const updateCloud = () => {
-            db.ref('tripTitle').set(tripTitle.value);
-            db.ref('itinerary').set(itinerary.value);
-            db.ref('expenses').set(expenses.value);
-            db.ref('todos').set(todos.value);
-        };
-
-        const addItinerary = () => {
-            const key = db.ref('itinerary').push().key;
-            db.ref(`itinerary/${key}`).set({ time: '10:00', location: '輸入地點' });
-        };
-
-        const addExpense = () => {
-            if (!newExp.value.name || !newExp.value.amount) return;
-            const key = db.ref('expenses').push().key;
-            db.ref(`expenses/${key}`).set({...newExp.value});
-            newExp.value = { name: '', amount: null };
-        };
-
-        const addTodo = () => {
-            const text = prompt("新增清單項目 (例: 護照、JR Pass)");
-            if (text) {
-                const key = db.ref('todos').push().key;
-                db.ref(`todos/${key}`).set({ text, done: false });
-            }
-        };
-
-        const toggleTodo = (id) => db.ref(`todos/${id}/done`).set(!todos.value[id].done);
-        const removeItem = (path, id) => db.ref(`${path}/${id}`).remove();
-        const showBigText = (jp) => bigText.value = jp.jp;
-
-        const settlements = computed(() => {
-            const exps = Object.values(expenses.value);
-            if (exps.length === 0) return [];
-            const totals = {};
-            exps.forEach(e => totals[e.name] = (totals[e.name] || 0) + e.amount);
-            const members = Object.keys(totals);
-            const avg = Object.values(totals).reduce((a,b)=>a+b,0) / members.length;
-            const balances = members.map(m => ({ name: m, bal: totals[m] - avg }));
-            const debtors = balances.filter(b => b.bal < 0).sort((a,b)=>a.bal-b.bal);
-            const creditors = balances.filter(b => b.bal > 0).sort((a,b)=>b.bal-a.bal);
-            const res = [];
-            let i=0, j=0;
-            while(i<debtors.length && j<creditors.length) {
-                const amt = Math.min(-debtors[i].bal, creditors[j].bal);
-                res.push({ from: debtors[i].name, to: creditors[j].name, amount: amt });
-                debtors[i].bal += amt; creditors[j].bal -= amt;
-                if(Math.abs(debtors[i].bal)<1) i++;
-                if(Math.abs(creditors[j].bal)<1) j++;
-            }
-            return res;
-        });
-
-        return {
-            activeTab, tripTitle, itinerary, expenses, todos, newExp, settlements, langCards, bigText,
-            addItinerary, addExpense, addTodo, toggleTodo, updateCloud, removeItem, showBigText,
-            openGoogleMap: (loc) => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank')
-        }
-    }
-}).mount('#app');
-</script>
 </body>
 </html>
