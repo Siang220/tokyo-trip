@@ -3,236 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Japan Travel Elite</title>
+    <title>日本極致行</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         
+        :root {
+            --sakura-pink: #FFF5F7;
+            --sakura-accent: #FFB7C5;
+            --deep-wood: #2D2424;
+        }
+
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #FBFBFD;
-            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.5s ease;
         }
 
-        .glass-header {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        /* 櫻花背景動畫 */
+        .sakura-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: linear-gradient(180deg, var(--sakura-pink) 0%, #FFFFFF 100%);
         }
 
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid rgba(0,0,0,0.05);
+        .dark-mode .sakura-bg {
+            background: linear-gradient(180deg, #1A1A1A 0%, #000000 100%);
         }
 
-        .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        /* 玻璃擬態 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2rem;
         }
+
+        .dark-mode .glass-card {
+            background: rgba(45, 45, 45, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 深色模式全局變量 */
+        .dark-mode { background-color: #121212; color: #E5E5E5; }
+        .dark-mode .text-gray-900 { color: #FFFFFF !important; }
+        .dark-mode .text-gray-800 { color: #F3F4F6 !important; }
+        .dark-mode .bg-white { background-color: #1E1E1E !important; }
+        .dark-mode .glass-header { background: rgba(30, 30, 30, 0.8); border-bottom-color: #333; }
+        .dark-mode .glass-nav { background: rgba(30, 30, 30, 0.9); border-top-color: #333; }
 
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: app-fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-content.active { display: block; animation: fade-in 0.4s ease-out; }
 
-        @keyframes app-fade-in {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        ::-webkit-scrollbar { display: none; }
+        /* 櫻花瓣圖案 */
+        .sakura-petal {
+            position: absolute;
+            background: #FFB7C5;
+            border-radius: 100% 0 100% 0;
+            opacity: 0.3;
+            animation: fall 10s infinite linear;
+        }
 
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
     </style>
 </head>
 <body class="antialiased">
 
-<div id="app" class="max-w-md mx-auto min-h-screen relative bg-[#FBFBFD] pb-32">
-    
-    <header class="glass-header sticky top-0 z-[100] px-6 py-4 flex justify-between items-end">
-        <div>
-            <span class="text-[10px] font-black tracking-[0.2em] text-red-600 uppercase">Premium Travel</span>
-            <h1 class="text-2xl font-black text-gray-900 leading-none mt-1">{{ currentTabName }}</h1>
-        </div>
-        <button v-if="activeTab === 'itinerary'" @click="addItinerary" 
-            class="w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center active:scale-90 transition shadow-lg">
-            <i class="fas fa-plus"></i>
-        </button>
-    </header>
+<div id="app" :class="['min-h-screen relative pb-32', { 'dark-mode': isDark }]">
+    <div class="sakura-bg">
+        <div v-for="n in 6" :key="n" class="sakura-petal" 
+             :style="{ left: Math.random()*100+'%', animationDelay: n*2+'s', width: '10px', height: '15px' }"></div>
+    </div>
 
-    <main class="px-5 py-6">
-        
-        <div :class="['tab-content', { active: activeTab === 'itinerary' }]">
-            <div class="mb-8">
-                <button @click="openAllLocations" 
-                    class="w-full bg-white border border-gray-100 py-4 rounded-3xl card-shadow flex items-center justify-center gap-3 active:scale-[0.98] transition text-gray-800 font-bold">
-                    <div class="w-8 h-8 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-map-location-dot"></i>
-                    </div>
-                    開啟今日全景導航
+    <div class="max-w-md mx-auto relative z-10">
+        <header class="glass-header sticky top-0 z-[100] px-6 py-5 flex justify-between items-center transition-all">
+            <div>
+                <span class="text-[10px] font-black tracking-[0.3em] text-pink-500 uppercase">Premium Japan</span>
+                <h1 class="text-2xl font-black text-gray-900">{{ currentTabTitle }}</h1>
+            </div>
+            <div class="flex gap-3">
+                <button @click="isDark = !isDark" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-yellow-400 transition-all">
+                    <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'"></i>
+                </button>
+                <button v-if="activeTab === 'itinerary'" @click="addItinerary" 
+                    class="w-10 h-10 bg-pink-500 text-white rounded-full flex items-center justify-center active:scale-90 shadow-lg">
+                    <i class="fas fa-plus"></i>
                 </button>
             </div>
+        </header>
 
-            <div class="space-y-6">
-                <div v-for="(item, index) in itinerary" :key="index" class="relative pl-8 border-l-[1.5px] border-gray-200 ml-2">
-                    <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-red-500 rounded-full z-10"></div>
-                    <div class="bg-white p-5 rounded-[2rem] card-shadow border border-gray-50">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <input v-model="item.time" type="time" class="text-sm font-black text-red-600 focus:outline-none mb-1">
-                                <input v-model="item.location" placeholder="行程名稱" class="block w-full text-lg font-bold text-gray-900 focus:outline-none placeholder:text-gray-300">
-                                <input v-model="item.note" placeholder="新增備註..." class="block w-full text-xs text-gray-400 focus:outline-none mt-1">
-                            </div>
-                            <div class="flex flex-col gap-4">
-                                <button @click="openMap(item.location)" class="text-gray-300 hover:text-blue-500 transition"><i class="fas fa-paper-plane"></i></button>
-                                <button @click="deleteItinerary(index)" class="text-gray-200 hover:text-red-400 transition"><i class="fas fa-xmark"></i></button>
+        <main class="px-5 py-6">
+            <div :class="['tab-content', { active: activeTab === 'itinerary' }]">
+                <button @click="openAllLocations" 
+                    class="w-full glass-card py-5 mb-8 flex items-center justify-center gap-3 active:scale-[0.98] transition shadow-sm border-pink-100">
+                    <i class="fas fa-map-marked-alt text-pink-500 text-lg"></i>
+                    <span class="font-bold text-gray-800">開始今日行程導覽</span>
+                </button>
+
+                <div class="space-y-6">
+                    <div v-for="(item, index) in itinerary" :key="index" class="relative pl-8 border-l-2 border-pink-200 ml-2">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-pink-500 rounded-full z-10"></div>
+                        <div class="glass-card p-5 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <input v-model="item.time" type="time" class="text-sm font-bold text-pink-600 bg-transparent focus:outline-none mb-1">
+                                    <input v-model="item.location" placeholder="要去哪裡？" class="block w-full text-lg font-bold bg-transparent text-gray-900 focus:outline-none placeholder:text-gray-300">
+                                    <input v-model="item.note" placeholder="備註（如：預約號碼）" class="block w-full text-xs text-gray-400 bg-transparent focus:outline-none mt-1">
+                                </div>
+                                <div class="flex flex-col gap-4 pl-2">
+                                    <button @click="openMap(item.location)" class="text-blue-400 hover:text-blue-600"><i class="fas fa-location-arrow"></i></button>
+                                    <button @click="deleteItinerary(index)" class="text-gray-300 hover:text-red-400"><i class="fas fa-trash-can"></i></button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div :class="['tab-content', { active: activeTab === 'split' }]">
-            <div class="bg-[#1C1C1E] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden mb-6">
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-10">
-                        <div>
-                            <h3 class="text-yellow-500 font-black tracking-tighter text-xl italic leading-none">TAX FREE</h3>
-                            <p class="text-[10px] text-gray-500 mt-1 uppercase font-bold">Duty Free Calculator</p>
-                        </div>
-                        <div class="flex items-center bg-white/5 rounded-full px-4 py-2 border border-white/10">
-                            <input v-model.number="taxRate" type="number" class="w-6 bg-transparent text-center font-bold text-sm focus:outline-none text-white">
-                            <span class="text-[10px] text-gray-500 ml-1">%</span>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <div class="border-b border-white/10 pb-4">
-                            <p class="text-[10px] text-gray-500 uppercase font-black mb-1">Input Amount (JPY)</p>
-                            <div class="flex items-baseline">
-                                <span class="text-xl font-light text-gray-400 mr-2">¥</span>
-                                <input v-model.number="taxInput" type="number" class="bg-transparent text-5xl font-light focus:outline-none w-full text-white" placeholder="0">
-                            </div>
-                        </div>
-                        <div class="flex justify-between">
+            <div :class="['tab-content', { active: activeTab === 'split' }]">
+                <div class="bg-gray-900 rounded-[2.5rem] p-8 text-white shadow-xl mb-6 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-8">
                             <div>
-                                <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">退稅後</p>
-                                <p class="text-2xl font-medium">¥ {{ taxRefunded.total }}</p>
+                                <h3 class="text-pink-400 font-black text-xl italic leading-none">免稅計算</h3>
+                                <p class="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">TAX FREE CALC</p>
                             </div>
-                            <div class="text-right">
-                                <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">節省台幣</p>
-                                <p class="text-2xl font-medium text-yellow-500">$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
+                            <div class="bg-white/10 px-3 py-1 rounded-full text-xs">稅率 {{ taxRate }}%</div>
+                        </div>
+                        <div class="space-y-5">
+                            <div class="border-b border-white/10 pb-4">
+                                <p class="text-[10px] text-gray-500 mb-1">含稅金額 (日圓)</p>
+                                <div class="flex items-baseline">
+                                    <span class="text-xl font-light text-gray-400 mr-2">¥</span>
+                                    <input v-model.number="taxInput" type="number" class="bg-transparent text-4xl font-light focus:outline-none w-full" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="flex justify-between">
+                                <div>
+                                    <p class="text-[10px] text-gray-500 font-bold mb-1">退稅後價格</p>
+                                    <p class="text-2xl font-medium">¥ {{ taxRefunded.total }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] text-pink-400 font-bold mb-1">省下台幣</p>
+                                    <p class="text-2xl font-medium text-pink-400">$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-            </div>
 
-            <div class="bg-white rounded-[2.5rem] p-8 card-shadow border border-gray-50 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-black text-gray-900">分帳匯率</h3>
-                    <div class="bg-red-50 px-4 py-1 rounded-full flex items-center">
-                        <span class="text-[10px] font-black text-red-600 mr-1">TWD:</span>
-                        <input v-model.number="fxRate" type="number" step="0.001" class="w-12 bg-transparent text-xs font-black text-red-600 focus:outline-none">
-                    </div>
-                </div>
-                <div class="flex gap-4 mb-4">
-                    <div class="flex-1">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase mb-2">總金額 (JPY)</p>
-                        <input v-model.number="bill.amount" type="number" class="w-full text-2xl font-bold border-b border-gray-100 pb-2 focus:outline-none focus:border-red-500 transition" placeholder="¥ 0">
-                    </div>
-                    <div class="w-20">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase mb-2">人數</p>
-                        <input v-model.number="bill.people" type="number" class="w-full text-2xl font-bold border-b border-gray-100 pb-2 text-center focus:outline-none focus:border-red-500 transition" placeholder="1">
-                    </div>
-                </div>
-                <div v-if="bill.amount" class="bg-gray-50 rounded-3xl p-4 flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-400">每人支付 (TWD)</span>
-                    <span class="text-2xl font-black text-gray-900">$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</span>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-[2.5rem] p-8 card-shadow border border-gray-50">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-black text-gray-900">當日花費紀錄</h3>
-                    <button @click="addExpense" class="w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center active:scale-90 transition">
-                        <i class="fas fa-plus text-xs"></i>
-                    </button>
-                </div>
-                <div class="space-y-3">
-                    <div v-for="(exp, idx) in expenses" :key="idx" class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl group">
-                        <input v-model="exp.item" placeholder="項目內容" class="flex-1 bg-transparent font-bold text-sm focus:outline-none">
-                        <div class="flex items-center gap-1 border-b border-gray-200">
-                            <span class="text-[10px] font-bold text-gray-400">¥</span>
-                            <input v-model.number="exp.amount" type="number" class="w-16 bg-transparent font-black text-right focus:outline-none text-sm" placeholder="0">
+                <div class="glass-card p-8 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-black">公平分帳</h3>
+                        <div class="bg-pink-50 dark:bg-pink-900/30 px-3 py-1 rounded-full">
+                            <span class="text-xs font-bold text-pink-600">匯率: </span>
+                            <input v-model.number="fxRate" type="number" step="0.001" class="w-12 bg-transparent text-xs font-black text-pink-600 focus:outline-none">
                         </div>
-                        <button @click="deleteExpense(idx)" class="text-gray-300 hover:text-red-400 transition"><i class="fas fa-circle-xmark"></i></button>
                     </div>
-                </div>
-                <div class="mt-8 pt-6 border-t border-dashed border-gray-200 flex justify-between items-end">
-                    <div>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">Today JPY</p>
-                        <p class="text-3xl font-black text-gray-900">¥ {{ totalExpenses }}</p>
+                    <div class="flex gap-4 mb-4">
+                        <div class="flex-1">
+                            <p class="text-[10px] text-gray-400 font-bold mb-2 uppercase">總日圓金額</p>
+                            <input v-model.number="bill.amount" type="number" class="w-full text-2xl font-bold border-b border-gray-100 dark:border-gray-700 bg-transparent pb-2 focus:outline-none">
+                        </div>
+                        <div class="w-16">
+                            <p class="text-[10px] text-gray-400 font-bold mb-2 uppercase">人數</p>
+                            <input v-model.number="bill.people" type="number" class="w-full text-2xl font-bold border-b border-gray-100 dark:border-gray-700 bg-transparent pb-2 text-center focus:outline-none">
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">Total TWD</p>
-                        <p class="text-xl font-bold text-red-600">$ {{ Math.round(totalExpenses * fxRate) }}</p>
+                    <div v-if="bill.amount" class="bg-pink-50/50 dark:bg-pink-900/20 rounded-2xl p-4 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400">每人應付 (台幣)</span>
+                        <span class="text-2xl font-black text-pink-600">$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div :class="['tab-content', { active: activeTab === 'tool' }]">
-            <div class="grid grid-cols-1 gap-4">
-                <a href="https://www.deepl.com/translator#zh/ja/" target="_blank" 
-                    class="group bg-white p-6 rounded-[2.5rem] card-shadow border border-gray-50 flex items-center justify-between active:scale-[0.98] transition">
-                    <div class="flex items-center gap-5">
-                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl">
-                            <i class="fas fa-language"></i>
+            <div :class="['tab-content', { active: activeTab === 'tool' }]">
+                <div class="grid grid-cols-1 gap-4">
+                    <a v-for="tool in tools" :key="tool.name" :href="tool.link" target="_blank"
+                       class="glass-card p-6 flex items-center justify-between active:scale-[0.98] transition">
+                        <div class="flex items-center gap-5">
+                            <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner', tool.color]">
+                                <i :class="tool.icon"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black">{{ tool.name }}</h4>
+                                <p class="text-xs text-gray-400">{{ tool.desc }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-black text-gray-900">DeepL 翻譯</h4>
-                            <p class="text-xs text-gray-400">精準日語翻譯</p>
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-200 group-hover:text-gray-400 transition"></i>
-                </a>
-                <div class="grid grid-cols-2 gap-4">
-                    <a href="https://www.jorudan.co.jp/" target="_blank" class="bg-white p-6 rounded-[2.5rem] card-shadow border border-gray-50 text-center active:scale-95 transition">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3">
-                            <i class="fas fa-train"></i>
-                        </div>
-                        <span class="text-sm font-black text-gray-800">乘換案內</span>
-                    </a>
-                    <a href="https://maps.google.com" target="_blank" class="bg-white p-6 rounded-[2.5rem] card-shadow border border-gray-50 text-center active:scale-95 transition">
-                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3">
-                            <i class="fas fa-map"></i>
-                        </div>
-                        <span class="text-sm font-black text-gray-800">Google Map</span>
+                        <i class="fas fa-chevron-right text-gray-200"></i>
                     </a>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 h-24 glass-nav px-8 flex justify-between items-center z-[100]">
-        <button @click="activeTab = 'itinerary'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'itinerary' ? 'text-gray-900 scale-110' : 'text-gray-300']">
-            <i class="fas fa-compass text-xl"></i>
-            <span class="text-[10px] font-black uppercase">Explore</span>
-        </button>
-        <button @click="activeTab = 'split'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'split' ? 'text-gray-900 scale-110' : 'text-gray-300']">
-            <i class="fas fa-wallet text-xl"></i>
-            <span class="text-[10px] font-black uppercase">Finance</span>
-        </button>
-        <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1 transition-all', activeTab === 'tool' ? 'text-gray-900 scale-110' : 'text-gray-300']">
-            <i class="fas fa-sliders text-xl"></i>
-            <span class="text-[10px] font-black uppercase">Tools</span>
-        </button>
-    </nav>
+        <nav class="fixed bottom-0 left-0 right-0 h-24 glass-nav px-10 flex justify-between items-center z-[100]">
+            <button @click="activeTab = 'itinerary'" :class="['flex flex-col items-center gap-1', activeTab === 'itinerary' ? 'text-pink-500' : 'text-gray-300']">
+                <i class="fas fa-map-location-dot text-xl"></i>
+                <span class="text-[10px] font-bold">行程</span>
+            </button>
+            <button @click="activeTab = 'split'" :class="['flex flex-col items-center gap-1', activeTab === 'split' ? 'text-pink-500' : 'text-gray-300']">
+                <i class="fas fa-sack-dollar text-xl"></i>
+                <span class="text-[10px] font-bold">財務</span>
+            </button>
+            <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1', activeTab === 'tool' ? 'text-pink-500' : 'text-gray-300']">
+                <i class="fas fa-toolbox text-xl"></i>
+                <span class="text-[10px] font-bold">工具</span>
+            </button>
+        </nav>
+    </div>
 </div>
 
 <script>
@@ -241,92 +232,61 @@
     createApp({
         setup() {
             const activeTab = ref('itinerary');
+            const isDark = ref(false);
             const fxRate = ref(0.215);
             const taxRate = ref(10);
             const taxInput = ref(null);
-            
-            // Itinerary Data
-            const savedItinerary = localStorage.getItem('japan_trip_premium_data');
-            const itinerary = ref(savedItinerary ? JSON.parse(savedItinerary) : [
-                { time: "09:00", location: "東京駅", note: "Premium Lounge Check-in" }
-            ]);
-
-            // Bill Split Data
             const bill = ref({ amount: null, people: 1 });
 
-            // Expense Data
-            const savedExpenses = localStorage.getItem('japan_trip_expenses');
-            const expenses = ref(savedExpenses ? JSON.parse(savedExpenses) : []);
-
-            const currentTabName = computed(() => {
-                const names = { 'itinerary': 'Explore', 'split': 'Finance', 'tool': 'Concierge' };
-                return names[activeTab.value];
+            const currentTabTitle = computed(() => {
+                const map = { itinerary: '今日探險', split: '開銷與計算', tool: '旅行百寶箱' };
+                return map[activeTab.value];
             });
+
+            const tools = [
+                { name: 'DeepL 翻譯', desc: '精準日本溝通', icon: 'fas fa-language', color: 'bg-indigo-50 text-indigo-500', link: 'https://www.deepl.com/translator#zh/ja/' },
+                { name: '乘換案內', desc: '交通路線查詢', icon: 'fas fa-train-subway', color: 'bg-orange-50 text-orange-500', link: 'https://www.jorudan.co.jp/' },
+                { name: 'Google 地圖', desc: '導航與景點', icon: 'fas fa-map', color: 'bg-blue-50 text-blue-500', link: 'https://www.google.com/maps' },
+                { name: '日本天氣', desc: '各縣市氣象預報', icon: 'fas fa-cloud-sun', color: 'bg-cyan-50 text-cyan-500', link: 'https://tenki.jp/' }
+            ];
+
+            const itinerary = ref(JSON.parse(localStorage.getItem('jp_itinerary')) || [
+                { time: "09:00", location: "東京車站", note: "拿取 JR Pass" }
+            ]);
 
             const taxRefunded = computed(() => {
                 if (!taxInput.value) return { total: 0, saved: 0 };
-                const originalPrice = taxInput.value / (1 + (taxRate.value / 100));
-                return {
-                    total: Math.round(originalPrice),
-                    saved: Math.round(taxInput.value - originalPrice)
-                };
+                const preTax = taxInput.value / (1 + (taxRate.value / 100));
+                return { total: Math.round(preTax), saved: Math.round(taxInput.value - preTax) };
             });
 
-            const totalExpenses = computed(() => {
-                return expenses.value.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
-            });
-
-            // Methods
-            const addItinerary = () => {
-                itinerary.value.push({ time: "12:00", location: "", note: "" });
-            };
-
-            const deleteItinerary = (index) => {
-                itinerary.value.splice(index, 1);
-            };
-
-            const addExpense = () => {
-                expenses.value.unshift({ item: "", amount: null });
-            };
-
-            const deleteExpense = (index) => {
-                expenses.value.splice(index, 1);
-            };
-
+            const addItinerary = () => itinerary.value.push({ time: "12:00", location: "", note: "" });
+            const deleteItinerary = (idx) => itinerary.value.splice(idx, 1);
+            
             const openMap = (loc) => {
                 if(!loc) return;
-                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank');
+                window.open(`https://www.google.com/maps/search/?api=1{encodeURIComponent(loc)}`, '_blank');
             };
 
             const openAllLocations = () => {
-                const locations = itinerary.value.map(i => i.location).filter(l => l !== "");
-                if (locations.length < 2) {
-                    if(locations.length === 1) openMap(locations[0]);
-                    return;
-                }
-                const origin = encodeURIComponent(locations[0]);
-                const destination = encodeURIComponent(locations[locations.length - 1]);
-                const waypoints = locations.slice(1, -1).map(l => encodeURIComponent(l)).join('|');
-                window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`, '_blank');
+                const locs = itinerary.value.map(i => i.location).filter(l => l !== "");
+                if (locs.length < 1) return;
+                if (locs.length === 1) return openMap(locs[0]);
+                const origin = encodeURIComponent(locs[0]);
+                const destination = encodeURIComponent(locs[locs.length - 1]);
+                const waypoints = locs.slice(1, -1).map(l => encodeURIComponent(l)).join('|');
+                window.open(`http://googleusercontent.com/maps.google.com/5{origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`, '_blank');
             };
 
-            // Watchers for persistence
-            watch(itinerary, (newVal) => {
-                localStorage.setItem('japan_trip_premium_data', JSON.stringify(newVal));
-            }, { deep: true });
+            watch(itinerary, (val) => localStorage.setItem('jp_itinerary', JSON.stringify(val)), { deep: true });
 
-            watch(expenses, (newVal) => {
-                localStorage.setItem('japan_trip_expenses', JSON.stringify(newVal));
-            }, { deep: true });
-
-            return {
-                activeTab, currentTabName, itinerary, bill, fxRate, taxRate, taxInput, taxRefunded,
-                expenses, totalExpenses, addItinerary, deleteItinerary, addExpense, deleteExpense, 
-                openMap, openAllLocations
+            return { 
+                activeTab, isDark, fxRate, taxRate, taxInput, bill, 
+                currentTabTitle, itinerary, taxRefunded, tools,
+                addItinerary, deleteItinerary, openMap, openAllLocations 
             };
         }
     }).mount('#app');
 </script>
-
 </body>
 </html>
