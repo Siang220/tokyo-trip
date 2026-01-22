@@ -3,23 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>日本極致行</title>
+    <title>日本極致行 - 櫻花版</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         
-        :root {
-            --sakura-pink: #FFF5F7;
-            --sakura-accent: #FFB7C5;
-            --deep-wood: #2D2424;
-        }
-
-        body { 
-            font-family: 'Noto Sans TC', sans-serif; 
-            transition: background-color 0.5s ease;
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: #FFF5F7; }
 
         /* 櫻花背景動畫 */
         .sakura-bg {
@@ -27,43 +18,57 @@
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             z-index: 0;
-            background: linear-gradient(180deg, var(--sakura-pink) 0%, #FFFFFF 100%);
+            background: linear-gradient(180deg, #FFF5F7 0%, #FFFFFF 100%);
+            transition: all 0.5s ease;
         }
 
+        /* --- 深色模式核心設定 --- */
         .dark-mode .sakura-bg {
-            background: linear-gradient(180deg, #1A1A1A 0%, #000000 100%);
+            background: linear-gradient(180deg, #121212 0%, #000000 100%) !important;
         }
 
-        /* 玻璃擬態 */
+        .dark-mode .glass-card {
+            background: rgba(40, 40, 40, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #FFFFFF !important;
+        }
+
+        .dark-mode .text-gray-900, 
+        .dark-mode .text-gray-800,
+        .dark-mode h1, .dark-mode h3, .dark-mode h4,
+        .dark-mode input {
+            color: #FFFFFF !important;
+        }
+
+        .dark-mode .glass-header, .dark-mode .glass-nav {
+            background: rgba(20, 20, 20, 0.85) !important;
+            border-color: #333 !important;
+        }
+
+        .dark-mode .bg-gray-100 { background-color: #333 !important; }
+        .dark-mode .bg-white { background-color: #222 !important; }
+        /* ----------------------- */
+
         .glass-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 2rem;
+            transition: all 0.3s ease;
         }
 
-        .dark-mode .glass-card {
-            background: rgba(45, 45, 45, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .glass-header {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.05);
         }
 
-        /* 深色模式全局變量 */
-        .dark-mode { background-color: #121212; color: #E5E5E5; }
-        .dark-mode .text-gray-900 { color: #FFFFFF !important; }
-        .dark-mode .text-gray-800 { color: #F3F4F6 !important; }
-        .dark-mode .bg-white { background-color: #1E1E1E !important; }
-        .dark-mode .glass-header { background: rgba(30, 30, 30, 0.8); border-bottom-color: #333; }
-        .dark-mode .glass-nav { background: rgba(30, 30, 30, 0.9); border-top-color: #333; }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fade-in 0.4s ease-out; }
-
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(0,0,0,0.05);
         }
 
-        /* 櫻花瓣圖案 */
         .sakura-petal {
             position: absolute;
             background: #FFB7C5;
@@ -75,27 +80,30 @@
         @keyframes fall {
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
             10% { opacity: 0.6; }
-            90% { opacity: 0.3; }
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fade-in 0.4s ease-out; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="antialiased">
 
-<div id="app" :class="['min-h-screen relative pb-32', { 'dark-mode': isDark }]">
+<div id="app" :class="[{ 'dark-mode': isDark }]">
     <div class="sakura-bg">
-        <div v-for="n in 6" :key="n" class="sakura-petal" 
-             :style="{ left: Math.random()*100+'%', animationDelay: n*2+'s', width: '10px', height: '15px' }"></div>
+        <div v-for="n in 8" :key="n" class="sakura-petal" 
+             :style="{ left: (n*12)+'%', animationDelay: (n*1.5)+'s', width: '12px', height: '18px' }"></div>
     </div>
 
-    <div class="max-w-md mx-auto relative z-10">
-        <header class="glass-header sticky top-0 z-[100] px-6 py-5 flex justify-between items-center transition-all">
+    <div class="max-w-md mx-auto min-h-screen relative z-10 pb-32">
+        <header class="glass-header sticky top-0 z-[100] px-6 py-5 flex justify-between items-center">
             <div>
-                <span class="text-[10px] font-black tracking-[0.3em] text-pink-500 uppercase">Premium Japan</span>
+                <span class="text-[10px] font-black tracking-[0.3em] text-pink-500 uppercase">Premium Travel</span>
                 <h1 class="text-2xl font-black text-gray-900">{{ currentTabTitle }}</h1>
             </div>
-            <div class="flex gap-3">
-                <button @click="isDark = !isDark" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-yellow-400 transition-all">
+            <div class="flex gap-2">
+                <button @click="toggleTheme" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 dark:text-yellow-400 transition-all shadow-sm">
                     <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'"></i>
                 </button>
                 <button v-if="activeTab === 'itinerary'" @click="addItinerary" 
@@ -109,23 +117,23 @@
             <div :class="['tab-content', { active: activeTab === 'itinerary' }]">
                 <button @click="openAllLocations" 
                     class="w-full glass-card py-5 mb-8 flex items-center justify-center gap-3 active:scale-[0.98] transition shadow-sm border-pink-100">
-                    <i class="fas fa-map-marked-alt text-pink-500 text-lg"></i>
-                    <span class="font-bold text-gray-800">開始今日行程導覽</span>
+                    <i class="fas fa-map-location-dot text-pink-500 text-lg"></i>
+                    <span class="font-bold">今日行程全景導航</span>
                 </button>
 
                 <div class="space-y-6">
                     <div v-for="(item, index) in itinerary" :key="index" class="relative pl-8 border-l-2 border-pink-200 ml-2">
                         <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-pink-500 rounded-full z-10"></div>
-                        <div class="glass-card p-5 shadow-sm">
-                            <div class="flex justify-between items-start">
+                        <div class="glass-card p-5">
+                            <div class="flex justify-between">
                                 <div class="flex-1">
-                                    <input v-model="item.time" type="time" class="text-sm font-bold text-pink-600 bg-transparent focus:outline-none mb-1">
-                                    <input v-model="item.location" placeholder="要去哪裡？" class="block w-full text-lg font-bold bg-transparent text-gray-900 focus:outline-none placeholder:text-gray-300">
-                                    <input v-model="item.note" placeholder="備註（如：預約號碼）" class="block w-full text-xs text-gray-400 bg-transparent focus:outline-none mt-1">
+                                    <input v-model="item.time" type="time" class="text-sm font-bold text-pink-500 bg-transparent focus:outline-none mb-1">
+                                    <input v-model="item.location" placeholder="地點名稱" class="block w-full text-lg font-bold bg-transparent focus:outline-none">
+                                    <input v-model="item.note" placeholder="新增筆記..." class="block w-full text-xs text-gray-400 bg-transparent focus:outline-none mt-1">
                                 </div>
                                 <div class="flex flex-col gap-4 pl-2">
-                                    <button @click="openMap(item.location)" class="text-blue-400 hover:text-blue-600"><i class="fas fa-location-arrow"></i></button>
-                                    <button @click="deleteItinerary(index)" class="text-gray-300 hover:text-red-400"><i class="fas fa-trash-can"></i></button>
+                                    <button @click="openMap(item.location)" class="text-blue-400"><i class="fas fa-location-arrow"></i></button>
+                                    <button @click="deleteItinerary(index)" class="text-gray-300"><i class="fas fa-xmark"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -134,76 +142,61 @@
             </div>
 
             <div :class="['tab-content', { active: activeTab === 'split' }]">
-                <div class="bg-gray-900 rounded-[2.5rem] p-8 text-white shadow-xl mb-6 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-8">
-                            <div>
-                                <h3 class="text-pink-400 font-black text-xl italic leading-none">免稅計算</h3>
-                                <p class="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-widest">TAX FREE CALC</p>
+                <div class="bg-zinc-900 rounded-[2.5rem] p-8 text-white shadow-xl mb-6 border border-white/5">
+                    <h3 class="text-pink-400 font-black text-xl italic mb-6">TAX FREE 免稅計算</h3>
+                    <div class="space-y-5">
+                        <div class="border-b border-white/10 pb-4">
+                            <p class="text-[10px] text-gray-500 mb-1 uppercase">含稅金額 (JPY)</p>
+                            <div class="flex items-baseline">
+                                <span class="text-xl text-gray-400 mr-2">¥</span>
+                                <input v-model.number="taxInput" type="number" class="bg-transparent text-4xl font-light focus:outline-none w-full" placeholder="0">
                             </div>
-                            <div class="bg-white/10 px-3 py-1 rounded-full text-xs">稅率 {{ taxRate }}%</div>
                         </div>
-                        <div class="space-y-5">
-                            <div class="border-b border-white/10 pb-4">
-                                <p class="text-[10px] text-gray-500 mb-1">含稅金額 (日圓)</p>
-                                <div class="flex items-baseline">
-                                    <span class="text-xl font-light text-gray-400 mr-2">¥</span>
-                                    <input v-model.number="taxInput" type="number" class="bg-transparent text-4xl font-light focus:outline-none w-full" placeholder="0">
-                                </div>
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-[10px] text-gray-500 font-bold mb-1">退稅後價格</p>
+                                <p class="text-2xl">¥ {{ taxRefunded.total }}</p>
                             </div>
-                            <div class="flex justify-between">
-                                <div>
-                                    <p class="text-[10px] text-gray-500 font-bold mb-1">退稅後價格</p>
-                                    <p class="text-2xl font-medium">¥ {{ taxRefunded.total }}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] text-pink-400 font-bold mb-1">省下台幣</p>
-                                    <p class="text-2xl font-medium text-pink-400">$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
-                                </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-pink-400 font-bold mb-1">省下約</p>
+                                <p class="text-2xl text-pink-400">NT$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-8 mb-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-black">公平分帳</h3>
-                        <div class="bg-pink-50 dark:bg-pink-900/30 px-3 py-1 rounded-full">
-                            <span class="text-xs font-bold text-pink-600">匯率: </span>
-                            <input v-model.number="fxRate" type="number" step="0.001" class="w-12 bg-transparent text-xs font-black text-pink-600 focus:outline-none">
+                <div class="glass-card p-8">
+                    <h3 class="text-lg font-black mb-6">多人分帳</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-bold mb-1">總金額 (日圓)</p>
+                            <input v-model.number="bill.amount" type="number" class="w-full text-xl font-bold bg-transparent border-b border-pink-100 dark:border-gray-700 pb-1 focus:outline-none">
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-bold mb-1">匯率 (TWD)</p>
+                            <input v-model.number="fxRate" type="number" step="0.001" class="w-full text-xl font-bold bg-transparent border-b border-pink-100 dark:border-gray-700 pb-1 focus:outline-none text-pink-500">
                         </div>
                     </div>
-                    <div class="flex gap-4 mb-4">
-                        <div class="flex-1">
-                            <p class="text-[10px] text-gray-400 font-bold mb-2 uppercase">總日圓金額</p>
-                            <input v-model.number="bill.amount" type="number" class="w-full text-2xl font-bold border-b border-gray-100 dark:border-gray-700 bg-transparent pb-2 focus:outline-none">
-                        </div>
-                        <div class="w-16">
-                            <p class="text-[10px] text-gray-400 font-bold mb-2 uppercase">人數</p>
-                            <input v-model.number="bill.people" type="number" class="w-full text-2xl font-bold border-b border-gray-100 dark:border-gray-700 bg-transparent pb-2 text-center focus:outline-none">
-                        </div>
-                    </div>
-                    <div v-if="bill.amount" class="bg-pink-50/50 dark:bg-pink-900/20 rounded-2xl p-4 flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400">每人應付 (台幣)</span>
-                        <span class="text-2xl font-black text-pink-600">$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</span>
+                    <div v-if="bill.amount" class="mt-6 p-4 bg-pink-50/50 dark:bg-white/5 rounded-2xl flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400">每人需支付</span>
+                        <span class="text-2xl font-black text-pink-500">NT$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</span>
                     </div>
                 </div>
             </div>
 
             <div :class="['tab-content', { active: activeTab === 'tool' }]">
-                <div class="grid grid-cols-1 gap-4">
-                    <a v-for="tool in tools" :key="tool.name" :href="tool.link" target="_blank"
-                       class="glass-card p-6 flex items-center justify-between active:scale-[0.98] transition">
-                        <div class="flex items-center gap-5">
-                            <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner', tool.color]">
+                <div class="grid gap-4">
+                    <a v-for="tool in tools" :href="tool.link" target="_blank" class="glass-card p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm', tool.color]">
                                 <i :class="tool.icon"></i>
                             </div>
                             <div>
-                                <h4 class="font-black">{{ tool.name }}</h4>
+                                <h4 class="font-bold">{{ tool.name }}</h4>
                                 <p class="text-xs text-gray-400">{{ tool.desc }}</p>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-right text-gray-200"></i>
+                        <i class="fas fa-arrow-right text-gray-200"></i>
                     </a>
                 </div>
             </div>
@@ -215,11 +208,11 @@
                 <span class="text-[10px] font-bold">行程</span>
             </button>
             <button @click="activeTab = 'split'" :class="['flex flex-col items-center gap-1', activeTab === 'split' ? 'text-pink-500' : 'text-gray-300']">
-                <i class="fas fa-sack-dollar text-xl"></i>
+                <i class="fas fa-wallet text-xl"></i>
                 <span class="text-[10px] font-bold">財務</span>
             </button>
             <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1', activeTab === 'tool' ? 'text-pink-500' : 'text-gray-300']">
-                <i class="fas fa-toolbox text-xl"></i>
+                <i class="fas fa-wand-magic-sparkles text-xl"></i>
                 <span class="text-[10px] font-bold">工具</span>
             </button>
         </nav>
@@ -232,31 +225,34 @@
     createApp({
         setup() {
             const activeTab = ref('itinerary');
-            const isDark = ref(false);
+            const isDark = ref(localStorage.getItem('theme') === 'dark');
             const fxRate = ref(0.215);
-            const taxRate = ref(10);
             const taxInput = ref(null);
             const bill = ref({ amount: null, people: 1 });
 
             const currentTabTitle = computed(() => {
-                const map = { itinerary: '今日探險', split: '開銷與計算', tool: '旅行百寶箱' };
-                return map[activeTab.value];
+                return { itinerary: '今日行程', split: '財務計算', tool: '旅行工具' }[activeTab.value];
             });
 
+            const toggleTheme = () => {
+                isDark.value = !isDark.value;
+                localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
+            };
+
             const tools = [
-                { name: 'DeepL 翻譯', desc: '精準日本溝通', icon: 'fas fa-language', color: 'bg-indigo-50 text-indigo-500', link: 'https://www.deepl.com/translator#zh/ja/' },
-                { name: '乘換案內', desc: '交通路線查詢', icon: 'fas fa-train-subway', color: 'bg-orange-50 text-orange-500', link: 'https://www.jorudan.co.jp/' },
-                { name: 'Google 地圖', desc: '導航與景點', icon: 'fas fa-map', color: 'bg-blue-50 text-blue-500', link: 'https://www.google.com/maps' },
-                { name: '日本天氣', desc: '各縣市氣象預報', icon: 'fas fa-cloud-sun', color: 'bg-cyan-50 text-cyan-500', link: 'https://tenki.jp/' }
+                { name: 'DeepL 翻譯', desc: '目前最強的日文翻譯', icon: 'fas fa-language', color: 'bg-indigo-50 text-indigo-500', link: 'https://www.deepl.com/translator#zh/ja/' },
+                { name: '乘換案內', desc: '日本鐵路交通查詢', icon: 'fas fa-train-subway', color: 'bg-orange-50 text-orange-500', link: 'https://www.jorudan.co.jp/' },
+                { name: 'Google 地圖', desc: '開啟地圖瀏覽', icon: 'fas fa-map', color: 'bg-blue-50 text-blue-500', link: 'https://www.google.com/maps' },
+                { name: 'Tenki 天氣', desc: '準確的日本氣象預報', icon: 'fas fa-sun', color: 'bg-yellow-50 text-yellow-500', link: 'https://tenki.jp/' }
             ];
 
-            const itinerary = ref(JSON.parse(localStorage.getItem('jp_itinerary')) || [
-                { time: "09:00", location: "東京車站", note: "拿取 JR Pass" }
+            const itinerary = ref(JSON.parse(localStorage.getItem('itinerary_v2')) || [
+                { time: "09:00", location: "東京駅", note: "拿取行李與週遊券" }
             ]);
 
             const taxRefunded = computed(() => {
                 if (!taxInput.value) return { total: 0, saved: 0 };
-                const preTax = taxInput.value / (1 + (taxRate.value / 100));
+                const preTax = taxInput.value / 1.1; // 日本一般稅率 10%
                 return { total: Math.round(preTax), saved: Math.round(taxInput.value - preTax) };
             });
 
@@ -265,23 +261,22 @@
             
             const openMap = (loc) => {
                 if(!loc) return;
-                window.open(`https://www.google.com/maps/search/?api=1{encodeURIComponent(loc)}`, '_blank');
+                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank');
             };
 
             const openAllLocations = () => {
                 const locs = itinerary.value.map(i => i.location).filter(l => l !== "");
                 if (locs.length < 1) return;
-                if (locs.length === 1) return openMap(locs[0]);
                 const origin = encodeURIComponent(locs[0]);
                 const destination = encodeURIComponent(locs[locs.length - 1]);
                 const waypoints = locs.slice(1, -1).map(l => encodeURIComponent(l)).join('|');
-                window.open(`http://googleusercontent.com/maps.google.com/5{origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`, '_blank');
+                window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`, '_blank');
             };
 
-            watch(itinerary, (val) => localStorage.setItem('jp_itinerary', JSON.stringify(val)), { deep: true });
+            watch(itinerary, (val) => localStorage.setItem('itinerary_v2', JSON.stringify(val)), { deep: true });
 
             return { 
-                activeTab, isDark, fxRate, taxRate, taxInput, bill, 
+                activeTab, isDark, toggleTheme, fxRate, taxInput, bill, 
                 currentTabTitle, itinerary, taxRefunded, tools,
                 addItinerary, deleteItinerary, openMap, openAllLocations 
             };
