@@ -1,1 +1,1 @@
-# tokyo-trip
+# japan-trip
