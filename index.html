@@ -3,269 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>日本極致行 - 櫻花版</title>
+    <title>日本極致旅遊助手 | Japan Travel Pro</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
-        
-        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: #FFF5F7; }
-
-        /* 櫻花背景動畫 */
-        .sakura-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            background: linear-gradient(180deg, #FFF5F7 0%, #FFFFFF 100%);
-            transition: all 0.5s ease;
-        }
-
-        /* --- 深色模式核心設定 --- */
-        .dark-mode .sakura-bg {
-            background: linear-gradient(180deg, #121212 0%, #000000 100%) !important;
-        }
-
-        .dark-mode .glass-card {
-            background: rgba(40, 40, 40, 0.8) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: #FFFFFF !important;
-        }
-
-        .dark-mode .text-gray-900, 
-        .dark-mode .text-gray-800,
-        .dark-mode h1, .dark-mode h3, .dark-mode h4,
-        .dark-mode input {
-            color: #FFFFFF !important;
-        }
-
-        .dark-mode .glass-header, .dark-mode .glass-nav {
-            background: rgba(20, 20, 20, 0.85) !important;
-            border-color: #333 !important;
-        }
-
-        .dark-mode .bg-gray-100 { background-color: #333 !important; }
-        .dark-mode .bg-white { background-color: #222 !important; }
-        /* ----------------------- */
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        .glass-header {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid rgba(0,0,0,0.05);
-        }
-
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            border-top: 0.5px solid rgba(0,0,0,0.05);
-        }
-
-        .sakura-petal {
-            position: absolute;
-            background: #FFB7C5;
-            border-radius: 100% 0 100% 0;
-            opacity: 0.3;
-            animation: fall 10s infinite linear;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.6; }
-            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Noto+Serif+TC:wght@700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        :root { --sakura-pink: #FFB7C5; --washy-red: #B94047; --soft-bg: #FFF5F5; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: var(--soft-bg); -webkit-tap-highlight-color: transparent; }
+        .serif { font-family: 'Noto Serif TC', 'Noto Serif JP', serif; }
+        .sakura-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .leaf { position: absolute; background-color: var(--sakura-pink); border-radius: 150% 0 150% 0; opacity: 0.6; animation: fall linear infinite; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+        .glass-header { background: rgba(255, 245, 245, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-bottom: 1px solid rgba(185, 64, 71, 0.1); }
+        .warm-card { background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(255, 183, 197, 0.3); box-shadow: 0 8px 20px -6px rgba(185, 64, 71, 0.1); }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fade-in 0.4s ease-out; }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content.active { display: block; animation: sakura-in 0.4s ease-out; }
+        @keyframes sakura-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="antialiased">
 
-<div id="app" :class="[{ 'dark-mode': isDark }]">
-    <div class="sakura-bg">
-        <div v-for="n in 8" :key="n" class="sakura-petal" 
-             :style="{ left: (n*12)+'%', animationDelay: (n*1.5)+'s', width: '12px', height: '18px' }"></div>
+<div id="app" class="max-w-md mx-auto min-h-screen relative pb-32 z-10">
+    <div class="sakura-container">
+        <div v-for="n in 12" :key="n" class="leaf" :style="generateLeafStyle()"></div>
     </div>
 
-    <div class="max-w-md mx-auto min-h-screen relative z-10 pb-32">
-        <header class="glass-header sticky top-0 z-[100] px-6 py-5 flex justify-between items-center">
+    <header class="glass-header sticky top-0 z-[100] px-6 py-5">
+        <div class="flex justify-between items-start mb-1">
+            <button @click="toggleLang" class="text-[10px] font-bold px-2 py-1 rounded-md bg-white border border-pink-100 text-[#B94047] active:scale-95 transition shadow-sm">
+                <i class="fas fa-globe mr-1"></i> {{ lang === 'zh' ? '日本語' : '中文' }}
+            </button>
+            <div v-if="activeTab === 'split'" class="text-right">
+                <span class="text-[9px] font-bold text-gray-400 block tracking-tighter uppercase">{{ t.totalTrip }}</span>
+                <span class="text-lg font-black text-[#B94047] serif">¥ {{ allDaysTotal }}</span>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-end mb-4">
             <div>
-                <span class="text-[10px] font-black tracking-[0.3em] text-pink-500 uppercase">Premium Travel</span>
-                <h1 class="text-2xl font-black text-gray-900">{{ currentTabTitle }}</h1>
+                <span class="text-[10px] font-bold tracking-[0.3em] text-[#B94047] uppercase opacity-70">Luxury Experience</span>
+                <h1 class="text-2xl font-black text-gray-800 serif">{{ t[activeTab] }}</h1>
             </div>
-            <div class="flex gap-2">
-                <button @click="toggleTheme" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-600 dark:text-yellow-400 transition-all shadow-sm">
-                    <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'"></i>
-                </button>
-                <button v-if="activeTab === 'itinerary'" @click="addItinerary" 
-                    class="w-10 h-10 bg-pink-500 text-white rounded-full flex items-center justify-center active:scale-90 shadow-lg">
-                    <i class="fas fa-plus"></i>
-                </button>
+            
+            <div class="flex gap-2" v-if="activeTab === 'itinerary'">
+                <button @click="addDay" class="w-10 h-10 bg-pink-100 text-[#B94047] rounded-xl flex items-center justify-center active:scale-90 transition"><i class="fas fa-calendar-plus"></i></button>
+                <button @click="addItem" class="w-10 h-10 bg-[#B94047] text-white rounded-xl flex items-center justify-center active:scale-90 transition shadow-lg shadow-red-100"><i class="fas fa-plus"></i></button>
             </div>
-        </header>
+        </div>
+        <div v-if="activeTab !== 'tool'" class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            <button v-for="(day, index) in tripData" :key="index" @click="currentDayIndex = index"
+                :class="['px-5 py-2 rounded-full whitespace-nowrap text-sm font-bold transition-all', currentDayIndex === index ? 'bg-[#B94047] text-white' : 'bg-white text-gray-400 border border-pink-100']">
+                {{ formatDayLabel(index + 1) }}
+            </button>
+        </div>
+    </header>
 
-        <main class="px-5 py-6">
-            <div :class="['tab-content', { active: activeTab === 'itinerary' }]">
-                <button @click="openAllLocations" 
-                    class="w-full glass-card py-5 mb-8 flex items-center justify-center gap-3 active:scale-[0.98] transition shadow-sm border-pink-100">
-                    <i class="fas fa-map-location-dot text-pink-500 text-lg"></i>
-                    <span class="font-bold">今日行程全景導航</span>
-                </button>
-
-                <div class="space-y-6">
-                    <div v-for="(item, index) in itinerary" :key="index" class="relative pl-8 border-l-2 border-pink-200 ml-2">
-                        <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-pink-500 rounded-full z-10"></div>
-                        <div class="glass-card p-5">
-                            <div class="flex justify-between">
-                                <div class="flex-1">
-                                    <input v-model="item.time" type="time" class="text-sm font-bold text-pink-500 bg-transparent focus:outline-none mb-1">
-                                    <input v-model="item.location" placeholder="地點名稱" class="block w-full text-lg font-bold bg-transparent focus:outline-none">
-                                    <input v-model="item.note" placeholder="新增筆記..." class="block w-full text-xs text-gray-400 bg-transparent focus:outline-none mt-1">
-                                </div>
-                                <div class="flex flex-col gap-4 pl-2">
-                                    <button @click="openMap(item.location)" class="text-blue-400"><i class="fas fa-location-arrow"></i></button>
-                                    <button @click="deleteItinerary(index)" class="text-gray-300"><i class="fas fa-xmark"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <main class="px-6 py-6 relative z-10">
+        <div :class="['tab-content', { active: activeTab === 'itinerary' }]">
+            <div class="mb-6 flex justify-between items-center px-2">
+                <input v-model="currentDay.dateLabel" class="text-gray-500 font-bold bg-transparent focus:outline-none text-sm w-full" :placeholder="t.dayTheme">
+                <button @click="deleteDay" v-if="tripData.length > 1" class="text-gray-300 text-xs ml-4"><i class="fas fa-trash"></i></button>
             </div>
-
-            <div :class="['tab-content', { active: activeTab === 'split' }]">
-                <div class="bg-zinc-900 rounded-[2.5rem] p-8 text-white shadow-xl mb-6 border border-white/5">
-                    <h3 class="text-pink-400 font-black text-xl italic mb-6">TAX FREE 免稅計算</h3>
-                    <div class="space-y-5">
-                        <div class="border-b border-white/10 pb-4">
-                            <p class="text-[10px] text-gray-500 mb-1 uppercase">含稅金額 (JPY)</p>
-                            <div class="flex items-baseline">
-                                <span class="text-xl text-gray-400 mr-2">¥</span>
-                                <input v-model.number="taxInput" type="number" class="bg-transparent text-4xl font-light focus:outline-none w-full" placeholder="0">
-                            </div>
-                        </div>
+            <button @click="openAllLocations" class="w-full bg-white border border-pink-100 py-4 rounded-3xl warm-card flex items-center justify-center gap-3 active:scale-95 transition text-[#B94047] font-bold mb-8">
+                <i class="fas fa-map-marked-alt"></i> {{ t.navRoute }}
+            </button>
+            <div class="space-y-6">
+                <div v-for="(item, index) in currentDay.items" :key="index" class="relative pl-8 border-l-2 border-pink-100 ml-2">
+                    <div class="absolute -left-[9px] top-0 w-4 h-4 bg-white border-2 border-[#B94047] rounded-full z-10 shadow-sm"></div>
+                    <div class="bg-white/90 p-5 rounded-[2rem] warm-card">
                         <div class="flex justify-between">
-                            <div>
-                                <p class="text-[10px] text-gray-500 font-bold mb-1">退稅後價格</p>
-                                <p class="text-2xl">¥ {{ taxRefunded.total }}</p>
+                            <div class="flex-1">
+                                <input v-model="item.time" type="time" class="text-sm font-bold text-[#B94047] bg-transparent focus:outline-none mb-1">
+                                <input v-model="item.location" :placeholder="t.inputLoc" class="block w-full text-lg font-bold text-gray-800 bg-transparent focus:outline-none serif">
+                                <input v-model="item.note" :placeholder="t.note" class="block w-full text-xs text-gray-400 bg-transparent focus:outline-none mt-2">
                             </div>
-                            <div class="text-right">
-                                <p class="text-[10px] text-pink-400 font-bold mb-1">省下約</p>
-                                <p class="text-2xl text-pink-400">NT$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
+                            <div class="flex flex-col gap-4 ml-2">
+                                <button @click="openMap(item.location)" class="text-pink-300"><i class="fas fa-location-arrow"></i></button>
+                                <button @click="deleteItem(index)" class="text-pink-100"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="glass-card p-8">
-                    <h3 class="text-lg font-black mb-6">多人分帳</h3>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <p class="text-[10px] text-gray-400 font-bold mb-1">總金額 (日圓)</p>
-                            <input v-model.number="bill.amount" type="number" class="w-full text-xl font-bold bg-transparent border-b border-pink-100 dark:border-gray-700 pb-1 focus:outline-none">
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 font-bold mb-1">匯率 (TWD)</p>
-                            <input v-model.number="fxRate" type="number" step="0.001" class="w-full text-xl font-bold bg-transparent border-b border-pink-100 dark:border-gray-700 pb-1 focus:outline-none text-pink-500">
+        <div :class="['tab-content', { active: activeTab === 'split' }]">
+            <div class="bg-gray-800 rounded-[2.5rem] p-8 text-white mb-6 shadow-xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-[#D4AF37] font-black italic serif tracking-wider">TAX CALCULATOR</h3>
+                        <div class="bg-white/10 px-4 py-1.5 rounded-full text-xs border border-white/10 flex items-center">
+                            <span class="text-gray-400 mr-1">{{ t.taxRate }}</span>
+                            <input v-model.number="taxRate" type="number" class="w-14 bg-transparent text-center font-bold outline-none text-[#D4AF37]" placeholder="10">
+                            <span class="ml-0.5">%</span>
                         </div>
                     </div>
-                    <div v-if="bill.amount" class="mt-6 p-4 bg-pink-50/50 dark:bg-white/5 rounded-2xl flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400">每人需支付</span>
-                        <span class="text-2xl font-black text-pink-500">NT$ {{ Math.round((bill.amount * fxRate) / (bill.people || 1)) }}</span>
+                    <p class="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest">{{ t.jpyTotal }}</p>
+                    <div class="flex items-baseline mb-6 border-b border-white/10 pb-2">
+                        <span class="text-xl text-[#D4AF37] mr-2 italic serif">¥</span>
+                        <input v-model.number="taxInput" type="number" class="bg-transparent text-5xl font-light w-full outline-none" placeholder="0">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">{{ t.afterTax }}</p>
+                            <p class="text-2xl serif font-medium">¥ {{ taxRefunded.total }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">{{ t.savedTwd }}</p>
+                            <p class="text-2xl text-[#D4AF37] font-bold">$ {{ Math.round(taxRefunded.saved * fxRate) }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div :class="['tab-content', { active: activeTab === 'tool' }]">
-                <div class="grid gap-4">
-                    <a v-for="tool in tools" :href="tool.link" target="_blank" class="glass-card p-6 flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div :class="['w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm', tool.color]">
-                                <i :class="tool.icon"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold">{{ tool.name }}</h4>
-                                <p class="text-xs text-gray-400">{{ tool.desc }}</p>
-                            </div>
+            <div class="bg-white/80 rounded-[2.5rem] p-8 warm-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-black text-gray-800 serif">{{ formatDayLabel(currentDayIndex + 1) }} {{ t.expense }}</h3>
+                    <button @click="addExpense" class="w-9 h-9 bg-gray-800 text-white rounded-xl flex items-center justify-center active:scale-90"><i class="fas fa-plus text-xs"></i></button>
+                </div>
+                <div class="space-y-4">
+                    <div v-for="(exp, idx) in currentDay.expenses" :key="idx" class="flex items-center gap-3 bg-pink-50/30 p-4 rounded-2xl border border-pink-50">
+                        <input v-model="exp.item" :placeholder="t.itemContent" class="flex-1 bg-transparent text-sm outline-none text-gray-700">
+                        <div class="flex items-center gap-1">
+                            <span class="text-[10px] text-pink-300">¥</span>
+                            <input v-model.number="exp.amount" type="number" class="w-16 bg-transparent font-black text-right outline-none text-[#B94047]" placeholder="0">
                         </div>
-                        <i class="fas fa-arrow-right text-gray-200"></i>
+                        <button @click="deleteExpense(idx)" class="text-pink-100"><i class="fas fa-minus-circle"></i></button>
+                    </div>
+                </div>
+                <div class="mt-8 pt-6 border-t border-dashed border-pink-100 flex justify-between items-end">
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">{{ t.dayTotal }} (JPY)</p>
+                        <p class="text-3xl font-black text-gray-800 serif">¥ {{ dailyTotal }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-gray-400 font-bold flex items-center justify-end uppercase">
+                            {{ t.fxRate }} <input v-model.number="fxRate" type="number" step="0.001" class="w-12 bg-transparent text-right outline-none ml-1 font-bold text-[#B94047]">
+                        </div>
+                        <p class="text-xl font-bold text-[#B94047]">$ {{ Math.round(dailyTotal * fxRate) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div :class="['tab-content', { active: activeTab === 'tool' }]">
+            <div class="grid grid-cols-1 gap-4">
+                <a href="https://www.deepl.com/translator#zh/ja/" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card flex items-center justify-between border border-pink-50 active:scale-95 transition">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-language"></i></div>
+                        <div><h4 class="font-bold text-gray-800 serif">DeepL</h4><p class="text-xs text-gray-400 mt-1">{{ t.deeplDesc }}</p></div>
+                    </div>
+                    <i class="fas fa-arrow-right text-pink-100"></i>
+                </a>
+                <a href="https://tenki.jp/" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card flex items-center justify-between border border-pink-50 active:scale-95 transition">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 bg-blue-50 text-blue-400 rounded-2xl flex items-center justify-center text-2xl"><i class="fas fa-cloud-sun"></i></div>
+                        <div><h4 class="font-bold text-gray-800 serif">Tenki.jp</h4><p class="text-xs text-gray-400 mt-1">{{ t.weatherDesc }}</p></div>
+                    </div>
+                    <i class="fas fa-arrow-right text-pink-100"></i>
+                </a>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="https://travel.rakuten.co.jp/" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card text-center border border-pink-50 active:scale-95 transition">
+                        <div class="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3"><i class="fas fa-hotel"></i></div>
+                        <span class="text-sm font-bold text-gray-700 serif">{{ t.rakuten }}</span>
+                    </a>
+                    <a href="https://www.gnavi.co.jp/" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card text-center border border-pink-50 active:scale-95 transition">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3"><i class="fas fa-utensils"></i></div>
+                        <span class="text-sm font-bold text-gray-700 serif">{{ t.gnavi }}</span>
+                    </a>
+                    <a href="https://www.jorudan.co.jp/" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card text-center border border-pink-50 active:scale-95 transition">
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3"><i class="fas fa-subway"></i></div>
+                        <span class="text-sm font-bold text-gray-700 serif">{{ t.jorudan }}</span>
+                    </a>
+                    <a href="https://www.google.com/maps" target="_blank" class="bg-white/90 p-6 rounded-[2.5rem] warm-card text-center border border-pink-50 active:scale-95 transition">
+                        <div class="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center text-xl mx-auto mb-3"><i class="fas fa-map-marked-alt"></i></div>
+                        <span class="text-sm font-bold text-gray-700 serif">Maps</span>
                     </a>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 h-24 glass-nav px-10 flex justify-between items-center z-[100]">
-            <button @click="activeTab = 'itinerary'" :class="['flex flex-col items-center gap-1', activeTab === 'itinerary' ? 'text-pink-500' : 'text-gray-300']">
-                <i class="fas fa-map-location-dot text-xl"></i>
-                <span class="text-[10px] font-bold">行程</span>
-            </button>
-            <button @click="activeTab = 'split'" :class="['flex flex-col items-center gap-1', activeTab === 'split' ? 'text-pink-500' : 'text-gray-300']">
-                <i class="fas fa-wallet text-xl"></i>
-                <span class="text-[10px] font-bold">財務</span>
-            </button>
-            <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1', activeTab === 'tool' ? 'text-pink-500' : 'text-gray-300']">
-                <i class="fas fa-wand-magic-sparkles text-xl"></i>
-                <span class="text-[10px] font-bold">工具</span>
-            </button>
-        </nav>
-    </div>
+    <nav class="fixed bottom-0 left-0 right-0 h-24 bg-white/90 backdrop-blur-md border-t border-pink-100 px-10 flex justify-between items-center z-[100]">
+        <button @click="activeTab = 'itinerary'" :class="['flex flex-col items-center gap-1.5 transition-all', activeTab === 'itinerary' ? 'text-[#B94047] scale-110' : 'text-gray-300']">
+            <i class="fas fa-compass text-xl"></i><span class="text-[10px] font-bold tracking-widest">{{ t.itinerary }}</span>
+        </button>
+        <button @click="activeTab = 'split'" :class="['flex flex-col items-center gap-1.5 transition-all', activeTab === 'split' ? 'text-[#B94047] scale-110' : 'text-gray-300']">
+            <i class="fas fa-yen-sign text-xl"></i><span class="text-[10px] font-bold tracking-widest">{{ t.split }}</span>
+        </button>
+        <button @click="activeTab = 'tool'" :class="['flex flex-col items-center gap-1.5 transition-all', activeTab === 'tool' ? 'text-[#B94047] scale-110' : 'text-gray-300']">
+            <i class="fas fa-th-large text-xl"></i><span class="text-[10px] font-bold tracking-widest">{{ t.tool }}</span>
+        </button>
+    </nav>
 </div>
 
 <script>
     const { createApp, ref, computed, watch } = Vue;
-
     createApp({
         setup() {
+            const lang = ref(localStorage.getItem('trip_lang') || 'zh');
             const activeTab = ref('itinerary');
-            const isDark = ref(localStorage.getItem('theme') === 'dark');
+            const currentDayIndex = ref(0);
             const fxRate = ref(0.215);
+            const taxRate = ref(10);
             const taxInput = ref(null);
-            const bill = ref({ amount: null, people: 1 });
 
-            const currentTabTitle = computed(() => {
-                return { itinerary: '今日行程', split: '財務計算', tool: '旅行工具' }[activeTab.value];
-            });
-
-            const toggleTheme = () => {
-                isDark.value = !isDark.value;
-                localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
+            const i18n = {
+                zh: {
+                    itinerary: '行程規劃', split: '財務工具', tool: '貼心工具',
+                    totalTrip: '累積總支出', dayTheme: '設定本日主題...',
+                    navRoute: '開啟本日導航路線', inputLoc: '輸入景點...', note: '備註...',
+                    taxRate: '稅率', jpyTotal: '日幣總額 (含稅)', afterTax: '退稅後金額',
+                    savedTwd: '省下約 (TWD)', expense: '支出', itemContent: '項目內容...',
+                    dayTotal: '本日小計', fxRate: '匯率', 
+                    deeplDesc: '公認最自然的日文翻譯工具', weatherDesc: '精準降雨與氣溫預測',
+                    jorudan: '乘換案內', rakuten: '樂天住宿', gnavi: '美食訂位',
+                    confirmDel: '要刪除這整天的行程與支出嗎？'
+                },
+                ja: {
+                    itinerary: 'スケジュール', split: '家計簿', tool: '便利ツール',
+                    totalTrip: '旅行総費用', dayTheme: '今日のテーマを設定...',
+                    navRoute: '今日のルートを案内', inputLoc: 'スポットを入力...', note: 'メモ...',
+                    taxRate: '税率', jpyTotal: '日本円総額 (税込)', afterTax: '免税後金額',
+                    savedTwd: '節約額 (TWD)', expense: '支出', itemContent: '項目内容...',
+                    dayTotal: '本日の合計', fxRate: 'レート',
+                    deeplDesc: '最も自然な翻訳ツール', weatherDesc: '正確な降水確率と気温',
+                    jorudan: '乗換案内', rakuten: '楽天トラベル', gnavi: 'ぐるなび',
+                    confirmDel: 'この日の予定と支出を削除しますか？'
+                }
             };
 
-            const tools = [
-                { name: 'DeepL 翻譯', desc: '目前最強的日文翻譯', icon: 'fas fa-language', color: 'bg-indigo-50 text-indigo-500', link: 'https://www.deepl.com/translator#zh/ja/' },
-                { name: '乘換案內', desc: '日本鐵路交通查詢', icon: 'fas fa-train-subway', color: 'bg-orange-50 text-orange-500', link: 'https://www.jorudan.co.jp/' },
-                { name: 'Google 地圖', desc: '開啟地圖瀏覽', icon: 'fas fa-map', color: 'bg-blue-50 text-blue-500', link: 'https://www.google.com/maps' },
-                { name: 'Tenki 天氣', desc: '準確的日本氣象預報', icon: 'fas fa-sun', color: 'bg-yellow-50 text-yellow-500', link: 'https://tenki.jp/' }
-            ];
+            const t = computed(() => i18n[lang.value]);
 
-            const itinerary = ref(JSON.parse(localStorage.getItem('itinerary_v2')) || [
-                { time: "09:00", location: "東京駅", note: "拿取行李與週遊券" }
+            const formatDayLabel = (num) => {
+                return lang.value === 'zh' ? `Day ${num}` : `${num}日目`;
+            };
+
+            const savedData = localStorage.getItem('japan_trip_pro_v2');
+            const tripData = ref(savedData ? JSON.parse(savedData) : [
+                { dateLabel: "Day 1 - 抵達", items: [{ time: "09:00", location: "成田機場", note: "入境" }], expenses: [] }
             ]);
+
+            const currentDay = computed(() => tripData.value[currentDayIndex.value]);
 
             const taxRefunded = computed(() => {
                 if (!taxInput.value) return { total: 0, saved: 0 };
-                const preTax = taxInput.value / 1.1; // 日本一般稅率 10%
-                return { total: Math.round(preTax), saved: Math.round(taxInput.value - preTax) };
+                const original = taxInput.value / (1 + (taxRate.value / 100));
+                return { total: Math.round(original), saved: Math.round(taxInput.value - original) };
             });
 
-            const addItinerary = () => itinerary.value.push({ time: "12:00", location: "", note: "" });
-            const deleteItinerary = (idx) => itinerary.value.splice(idx, 1);
-            
-            const openMap = (loc) => {
-                if(!loc) return;
-                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank');
+            const dailyTotal = computed(() => {
+                return currentDay.value.expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+            });
+
+            const allDaysTotal = computed(() => {
+                return tripData.value.reduce((total, day) => {
+                    const daySum = day.expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+                    return total + daySum;
+                }, 0);
+            });
+
+            const toggleLang = () => {
+                lang.value = lang.value === 'zh' ? 'ja' : 'zh';
+                localStorage.setItem('trip_lang', lang.value);
+            };
+
+            const addDay = () => {
+                const dayNum = tripData.value.length + 1;
+                tripData.value.push({ 
+                    dateLabel: formatDayLabel(dayNum), 
+                    items: [], 
+                    expenses: [] 
+                });
+                currentDayIndex.value = tripData.value.length - 1;
+            };
+
+            const deleteDay = () => { 
+                if(confirm(t.value.confirmDel)){ 
+                    tripData.value.splice(currentDayIndex.value, 1); 
+                    currentDayIndex.value = 0; 
+                } 
+            };
+
+            const addItem = () => currentDay.value.items.push({ time: "12:00", location: "", note: "" });
+            const deleteItem = (idx) => currentDay.value.items.splice(idx, 1);
+            const addExpense = () => currentDay.value.expenses.unshift({ item: "", amount: null });
+            const deleteExpense = (idx) => currentDay.value.expenses.splice(idx, 1);
+
+            const openMap = (loc) => { 
+                if(!loc) return; 
+                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank'); 
             };
 
             const openAllLocations = () => {
-                const locs = itinerary.value.map(i => i.location).filter(l => l !== "");
+                const locs = currentDay.value.items.map(i => i.location).filter(l => l !== "");
                 if (locs.length < 1) return;
                 const origin = encodeURIComponent(locs[0]);
                 const destination = encodeURIComponent(locs[locs.length - 1]);
@@ -273,12 +306,21 @@
                 window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=transit`, '_blank');
             };
 
-            watch(itinerary, (val) => localStorage.setItem('itinerary_v2', JSON.stringify(val)), { deep: true });
+            const generateLeafStyle = () => ({
+                left: Math.random() * 100 + 'vw',
+                animationDuration: 5 + Math.random() * 8 + 's',
+                animationDelay: Math.random() * 5 + 's',
+                width: 8 + Math.random() * 10 + 'px',
+                height: 8 + Math.random() * 10 + 'px'
+            });
 
-            return { 
-                activeTab, isDark, toggleTheme, fxRate, taxInput, bill, 
-                currentTabTitle, itinerary, taxRefunded, tools,
-                addItinerary, deleteItinerary, openMap, openAllLocations 
+            watch(tripData, (val) => localStorage.setItem('japan_trip_pro_v2', JSON.stringify(val)), { deep: true });
+
+            return {
+                lang, t, toggleLang, formatDayLabel, activeTab, currentDayIndex, tripData, currentDay,
+                taxRate, taxInput, taxRefunded, dailyTotal, allDaysTotal, fxRate,
+                addDay, deleteDay, addItem, deleteItem, addExpense, deleteExpense,
+                openMap, openAllLocations, generateLeafStyle
             };
         }
     }).mount('#app');
